@@ -9,6 +9,7 @@ from app.api.v1.router import api_router
 from app.core.exceptions import register_exception_handlers
 from app.db.database import Base, engine
 from app.schemas.schemas import HealthcheckResponse, SuccessResponse
+from scraper.scraper import run_scraper
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(_: FastAPI):
     try:
         Base.metadata.create_all(bind=engine)
+        run_scraper()
     except SQLAlchemyError as exc:  # pragma: no cover
         logger.warning("Database startup tasks skipped: %s", exc)
     yield
