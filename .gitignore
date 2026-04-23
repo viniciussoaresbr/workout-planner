@@ -1,0 +1,27 @@
+.codex
+AGENTS.md
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Backend local artifacts
+backend/.env
+backend/workout_planner.db
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
+backend/app/**/__pycache__/
+backend/scraper/__pycache__/
+backend/tests/__pycache__/
+backend/venv/
+
+# Node / Angular
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+frontend/coverage/
