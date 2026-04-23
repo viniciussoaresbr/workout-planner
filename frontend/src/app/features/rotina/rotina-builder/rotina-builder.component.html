@@ -1,0 +1,219 @@
+<section
+  class="min-h-screen bg-[linear-gradient(180deg,_rgba(14,165,233,0.12),_transparent_24%),linear-gradient(135deg,_#020617,_#111827_48%,_#0f172a)] px-4 py-6 sm:px-6 lg:px-8"
+>
+  <div class="mx-auto max-w-7xl">
+    <header
+      class="mb-6 rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur"
+    >
+      <div
+        class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between"
+      >
+        <div>
+          <p class="text-sm uppercase tracking-[0.35em] text-cyan-300">
+            Workout Planner
+          </p>
+          <h1 class="mt-3 text-4xl font-black text-white">Rotina de Treino</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+            Busque exercícios, ajuste séries e repetições e exporte a planilha
+            de treino.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button
+            type="button"
+            class="rounded-2xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-slate-500"
+            (click)="logout()"
+          >
+            Sair
+          </button>
+          <button
+            type="button"
+            class="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-400/20"
+            [disabled]="isSaving"
+            (click)="salvarRotina()"
+          >
+            {{ isSaving ? 'Salvando...' : 'Salvar rotina' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
+            [disabled]="isExporting"
+            (click)="exportarPlanilha()"
+          >
+            {{ isExporting ? 'Exportando...' : 'Exportar Planilha' }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div
+      class="mb-6 grid gap-4 rounded-[2rem] border border-white/10 bg-slate-900/60 p-5 backdrop-blur lg:grid-cols-[1fr_260px_180px]"
+    >
+      <label class="block">
+        <span
+          class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+        >
+          Nome da rotina
+        </span>
+        <input
+          type="text"
+          maxlength="100"
+          [formControl]="rotinaForm.controls.nome"
+          class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+          placeholder="Digite o nome da rotina de treino"
+        />
+      </label>
+
+      <label class="block">
+        <span
+          class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+        >
+          Rotinas salvas
+        </span>
+        <div class="select-wrapper">
+          <select
+            class="custom-select"
+            [value]="selectedRoutineId || ''"
+            (change)="carregarRotina($any($event.target).value)"
+          >
+            <option value="">Selecionar</option>
+            <option *ngFor="let rotina of rotinasSalvas" [value]="rotina.id">
+              {{ rotina.nome }}
+            </option>
+          </select>
+        </div>
+      </label>
+
+      <button
+        type="button"
+        class="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/20"
+        (click)="excluirRotina()"
+      >
+        Excluir rotina
+      </button>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+      <section
+        class="rounded-[2rem] border border-white/10 bg-slate-900/70 p-5 backdrop-blur"
+      >
+        <div class="flex items-end justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-white">
+              Biblioteca de exercícios
+            </h2>
+            <p class="mt-1 text-sm text-slate-400">
+              Encontre os exercícios por grupo muscular e arraste-os para os
+              dias de treino.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-3">
+          <label class="block">
+            <span
+              class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+            >
+              Selecione o Músculo
+            </span>
+            <div class="select-wrapper">
+              <select [formControl]="musculoControl" class="custom-select">
+                <option
+                  *ngFor="let musculo of musculosDisponiveis"
+                  [value]="musculo"
+                >
+                  {{ musculo }}
+                </option>
+              </select>
+            </div>
+          </label>
+
+          <label class="block">
+            <span
+              class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+            >
+              Buscar exercício por músculo
+            </span>
+            <input
+              type="text"
+              [formControl]="buscaControl"
+              class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+              placeholder="Digite o nome do exercício..."
+            />
+          </label>
+        </div>
+
+        <div
+          cdkDropList
+          id="biblioteca-exercicios"
+          [cdkDropListData]="exerciciosDisponiveis"
+          [cdkDropListConnectedTo]="connectedDropLists"
+          class="mt-5 space-y-3 rounded-3xl border border-dashed border-slate-700 bg-slate-950/50 p-3 min-h-[30rem] cursor-grab"
+          (cdkDropListDropped)="onDrop($event)"
+        >
+          <div
+            *ngIf="isLoadingExercises"
+            class="px-2 py-12 text-center text-sm text-slate-500"
+          >
+            Carregando biblioteca...
+          </div>
+
+          <article
+            *ngFor="let exercicio of exerciciosDisponiveis"
+            cdkDrag
+            class="rounded-2xl border border-white/10 bg-slate-900 p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-white">{{ exercicio.nome }}</h3>
+                <p class="mt-1 text-sm text-cyan-300">
+                  {{ exercicio.musculo }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="flex p-1 items-center justify-center rounded-md border-cyan-400/30 bg-cyan-400/10 text-lg font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
+                (click)="addExerciseToNextAvailableDay(exercicio)"
+              >
+                <ng-icon name="heroPlus"></ng-icon>
+              </button>
+            </div>
+          </article>
+
+          <p
+            *ngIf="!isLoadingExercises && !exerciciosDisponiveis.length"
+            class="px-2 py-12 text-center text-sm text-slate-500"
+          >
+            Nenhum exercício encontrado.
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="rounded-[2rem] border border-white/10 bg-slate-900/70 p-5 backdrop-blur"
+      >
+        <div class="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Sua rotina semanal</h2>
+            <p class="mt-1 text-sm text-slate-400">
+              Organize sua semana arrastando os exercícios entre os dias e
+              reordenando a sequência conforme sua preferência.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 xl:grid-cols-3 cursor-grab">
+          <app-dia-treino
+            *ngFor="let dia of dias; trackBy: trackByDia"
+            [dia]="dia"
+            [dropListId]="dropListId(dia.id)"
+            [connectedDropLists]="connectedDropLists"
+            (exerciseDropped)="onDrop($event)"
+            (removeExercise)="removeExercise($event)"
+          ></app-dia-treino>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>

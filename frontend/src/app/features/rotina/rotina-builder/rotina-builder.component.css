@@ -1,0 +1,7 @@
+.cdk-drop-list-dragging .cdk-drag {
+  transition: transform 180ms ease;
+}
+
+.cdk-drag-animating {
+  transition: transform 180ms ease;
+}

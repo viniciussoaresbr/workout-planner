@@ -12,6 +12,7 @@ import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { AuthModule } from './features/auth/auth.module';
+import { RotinaModule } from './features/rotina/rotina.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -31,6 +32,7 @@ import { AuthModule } from './features/auth/auth.module';
     }),
     CoreModule,
     AuthModule,
+    RotinaModule,
     AppRoutingModule,
   ],
   providers: [
