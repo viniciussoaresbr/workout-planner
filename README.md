@@ -1,6 +1,6 @@
 # Workout Planner
 
-Aplicação web para pesquisar exercícios, montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e uma camada de seed/scraping para popular a base inicial de exercícios.
+Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e uma camada de seed/scraping para popular a base inicial de exercícios.
 
 ![Home](./frontend/src/app/assets/screenshots/rotina.png)
 
