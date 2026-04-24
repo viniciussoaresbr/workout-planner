@@ -2,6 +2,14 @@
 
 Aplicação web para pesquisar exercícios, montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e uma camada de seed/scraping para popular a base inicial de exercícios.
 
+![Home](./frontend/src/app/assets/screenshots/rotina.png)
+
+<div align="center">
+  <img src="./frontend/src/app/assets/screenshots/login.png" width="33%" alt="Search" />
+  <img src="./frontend/src/app/assets/screenshots/register.png" width="33%" alt="Forecast" />
+  <img src="./frontend/src/app/assets/screenshots/drag-and-drop.png" width="33%" alt="Details" />
+</div>
+
 ## Funcionalidades
 
 - Cadastro e autenticação de usuários com JWT
@@ -124,7 +132,6 @@ Com a API em execução:
 
 - Backend: `http://localhost:8000`
 - Swagger UI: `http://localhost:8000/docs`
-- Healthcheck: `http://localhost:8000/health`
 
 Observação: no startup, a API cria as tabelas necessárias e sincroniza um conjunto inicial de exercícios no banco.
 
@@ -177,12 +184,6 @@ pytest
 ```
 
 ### Frontend
-
-Rodar testes:
-
-```bash
-npm test
-```
 
 Gerar build de produção:
 
