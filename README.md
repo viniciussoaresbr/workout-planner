@@ -38,22 +38,6 @@ Aplicação web para pesquisar exercícios, montar rotinas de treino personaliza
 - Karma / Jasmine
 - npm
 
-## Estrutura do Projeto
-
-```text
-workout-planner/
-├── backend/
-│   ├── app/
-│   ├── scraper/
-│   ├── alembic/
-│   ├── tests/
-│   └── requirements.txt
-└── frontend/
-    ├── src/
-    ├── package.json
-    └── angular.json
-```
-
 ## Como Rodar o Projeto Localmente
 
 ### 1. Pré-requisitos
