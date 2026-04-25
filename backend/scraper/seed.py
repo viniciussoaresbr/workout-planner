@@ -87,6 +87,18 @@ EXERCICIOS_EXEMPLO = [
 {"nome": "Panturrilha em pé", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha em pé."},
 {"nome": "Panturrilha sentado", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha sentado."},
 {"nome": "Panturrilha no leg press", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha no leg press."},
+
+# ================= NOVOS EXERCÍCIOS =================
+{"nome": "Supino inclinado na máquina", "musculo_alvo": "Peito", "descricao": "Execução do exercício Supino inclinado em máquina guiada."},
+{"nome": "Crossover com banco", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crossover com apoio em banco para melhor isolamento do peitoral."},
+{"nome": "Paralela para peito", "musculo_alvo": "Peito", "descricao": "Execução de paralela com inclinação do tronco para foco em peitoral."},
+{"nome": "Puxada alta convergente", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada alta em máquina convergente."},
+{"nome": "Remada máquina unilateral", "musculo_alvo": "Costas", "descricao": "Execução do exercício Remada em máquina de forma unilateral."},
+{"nome": "Levantamento sumô na máquina", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Levantamento sumô em máquina guiada."},
+{"nome": "Stiff com barra", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Stiff com barra."},
+{"nome": "Elevação pélvica na máquina", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Elevação pélvica em máquina."},
+{"nome": "Rosca Scott na máquina", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca Scott em máquina ou polia."},
+{"nome": "Tríceps coice na polia", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps coice utilizando polia."},
 ]
 
 GRUPOS_OBRIGATORIOS = {
