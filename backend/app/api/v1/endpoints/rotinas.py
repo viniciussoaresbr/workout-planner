@@ -31,7 +31,10 @@ def _sync_dias(rotina: Rotina, payload: RotinaCreate | RotinaUpdate, db: Session
     if payload.dias is None:
         return
 
-    rotina.dias.clear()
+    if rotina.id is not None and rotina.dias:
+        rotina.dias.clear()
+        db.flush()
+
     for dia_payload in sorted(payload.dias, key=lambda dia: dia.ordem):
         dia = DiaRotina(nome=dia_payload.nome, ordem=dia_payload.ordem)
         for item_payload in sorted(dia_payload.itens, key=lambda item: item.ordem):
