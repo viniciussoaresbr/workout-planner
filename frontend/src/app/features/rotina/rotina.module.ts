@@ -7,7 +7,12 @@ import { DiaTreinoComponent } from './dia-treino/dia-treino.component';
 import { RotinaBuilderComponent } from './rotina-builder/rotina-builder.component';
 import { RotinaRoutingModule } from './rotina-routing.module';
 import { NgIconsModule } from '@ng-icons/core';
-import { HeroTrash, HeroPlus } from '@ng-icons/heroicons/outline';
+import {
+  HeroClipboardList,
+  HeroTrash,
+  HeroPlus,
+  HeroRefresh,
+} from '@ng-icons/heroicons/outline';
 
 @NgModule({
   declarations: [RotinaBuilderComponent, DiaTreinoComponent],
@@ -17,7 +22,12 @@ import { HeroTrash, HeroPlus } from '@ng-icons/heroicons/outline';
     ReactiveFormsModule,
     DragDropModule,
     RotinaRoutingModule,
-    NgIconsModule.withIcons({ HeroTrash, HeroPlus }),
+    NgIconsModule.withIcons({
+      HeroClipboardList,
+      HeroTrash,
+      HeroPlus,
+      HeroRefresh,
+    }),
   ],
   exports: [RotinaBuilderComponent, DiaTreinoComponent],
 })

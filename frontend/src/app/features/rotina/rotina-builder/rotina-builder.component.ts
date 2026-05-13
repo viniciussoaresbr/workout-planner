@@ -14,6 +14,7 @@ import {
   combineLatest,
   debounceTime,
   distinctUntilChanged,
+  finalize,
   startWith,
   switchMap,
   takeUntil,
@@ -62,7 +63,10 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
   musculosDisponiveis: string[] = [];
   rotinasSalvas: RotinaResponse[] = [];
   selectedRoutineId: string | null = null;
+  loadingRoutineId: string | null = null;
   isLoadingExercises = false;
+  isLoadingRoutines = false;
+  isLoadingRoutineDetails = false;
   isSaving = false;
   isExporting = false;
 
@@ -136,6 +140,18 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
       'biblioteca-exercicios',
       ...this.dias.map(dia => this.dropListId(dia.id)),
     ];
+  }
+
+  get rotinaActionLabel(): string {
+    if (this.isSaving) {
+      return 'Salvando...';
+    }
+
+    return this.selectedRoutineId ? 'Salvar rotina' : 'Adicionar rotina';
+  }
+
+  get isGlobalLoading(): boolean {
+    return this.isLoadingRoutines || this.isLoadingRoutineDetails;
   }
 
   dropListId(diaId: string): string {
@@ -241,28 +257,39 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.rotinaService.buscarPorId(id).subscribe({
-      next: rotina => {
-        this.selectedRoutineId = rotina.id;
-        this.rotinaForm.patchValue({
-          nome: rotina.nome,
-        });
-        this.dias = rotina.dias.map(dia => ({
-          ...dia,
-          exercicios: dia.exercicios.map(exercicio => ({
-            ...exercicio,
-            uid: crypto.randomUUID(),
-            series: exercicio.series ?? 4,
-            repeticoes: exercicio.repeticoes ?? 12,
-          })),
-        }));
-        this.nextDayIndex = this.dias.filter(
-          dia => dia.exercicios.length > 0,
-        ).length;
-        this.toastr.success('Rotina carregada.');
-      },
-      error: (_error: HttpErrorResponse) => {},
-    });
+    this.isLoadingRoutineDetails = true;
+    this.loadingRoutineId = id;
+
+    this.rotinaService
+      .buscarPorId(id)
+      .pipe(
+        finalize(() => {
+          this.isLoadingRoutineDetails = false;
+          this.loadingRoutineId = null;
+        }),
+      )
+      .subscribe({
+        next: rotina => {
+          this.selectedRoutineId = rotina.id;
+          this.rotinaForm.patchValue({
+            nome: rotina.nome,
+          });
+          this.dias = rotina.dias.map(dia => ({
+            ...dia,
+            exercicios: dia.exercicios.map(exercicio => ({
+              ...exercicio,
+              uid: crypto.randomUUID(),
+              series: exercicio.series ?? 4,
+              repeticoes: exercicio.repeticoes ?? 12,
+            })),
+          }));
+          this.nextDayIndex = this.dias.filter(
+            dia => dia.exercicios.length > 0,
+          ).length;
+          this.toastr.success('Rotina carregada.');
+        },
+        error: (_error: HttpErrorResponse) => {},
+      });
   }
 
   excluirRotina(): void {
@@ -314,8 +341,51 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  selecionarRotina(id: string): void {
+    if (id === this.selectedRoutineId || this.isLoadingRoutineDetails) {
+      return;
+    }
+
+    this.carregarRotina(id);
+  }
+
+  limparCampos(): void {
+    this.selectedRoutineId = null;
+    this.resetBuilder();
+  }
+
   trackByDia(_: number, dia: DiaTreino): string {
     return dia.id;
+  }
+
+  trackByRotina(_: number, rotina: RotinaResponse): string {
+    return rotina.id;
+  }
+
+  rotinaCardTitle(rotina: RotinaResponse): string {
+    if (rotina.id !== this.selectedRoutineId) {
+      return rotina.nome;
+    }
+
+    return this.rotinaForm.controls.nome.value.trim() || rotina.nome;
+  }
+
+  totalExercicios(rotina: RotinaResponse): number {
+    return this.cardDias(rotina).reduce(
+      (total, dia) => total + dia.exercicios.length,
+      0,
+    );
+  }
+
+  gruposMusculares(rotina: RotinaResponse): string {
+    const grupos = new Set(
+      this.cardDias(rotina)
+        .flatMap(dia => dia.exercicios)
+        .map(exercicio => exercicio.musculo)
+        .filter(Boolean),
+    );
+
+    return Array.from(grupos).join(' · ') || 'Sem grupos musculares';
   }
 
   private buildPayload(): RotinaPayload {
@@ -328,9 +398,16 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
   }
 
   private loadRoutines(): void {
+    this.isLoadingRoutines = true;
+
     this.rotinaService
       .listar()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        finalize(() => {
+          this.isLoadingRoutines = false;
+        }),
+        takeUntil(this.destroy$),
+      )
       .subscribe({
         next: rotinas => {
           this.rotinasSalvas = rotinas;
@@ -346,6 +423,14 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
     });
     this.dias = this.createDefaultDays();
     this.nextDayIndex = 0;
+  }
+
+  private cardDias(rotina: RotinaResponse): DiaTreino[] {
+    if (rotina.id !== this.selectedRoutineId) {
+      return rotina.dias;
+    }
+
+    return this.dias;
   }
 
   private toRoutineExercise(exercicio: Exercicio): ExercicioRotina {

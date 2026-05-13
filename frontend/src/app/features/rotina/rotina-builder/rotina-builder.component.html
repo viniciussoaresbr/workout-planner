@@ -48,50 +48,111 @@
     </header>
 
     <div
-      class="mb-6 grid gap-4 rounded-[2rem] border border-white/10 bg-slate-900/60 p-5 backdrop-blur lg:grid-cols-[1fr_260px_180px]"
+      class="mb-6 rounded-[2rem] border border-white/10 bg-slate-900/60 p-5 backdrop-blur"
     >
-      <label class="block">
-        <span
-          class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
-        >
-          Nome da rotina
-        </span>
-        <input
-          type="text"
-          maxlength="100"
-          [formControl]="rotinaForm.controls.nome"
-          class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
-          placeholder="Digite o nome da rotina de treino"
-        />
-      </label>
+      <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+        <label class="block">
+          <span
+            class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+          >
+            Nome da rotina
+          </span>
+          <input
+            type="text"
+            maxlength="100"
+            [formControl]="rotinaForm.controls.nome"
+            class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+            placeholder="Digite o nome da rotina de treino"
+          />
+        </label>
 
-      <label class="block">
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="isLoadingRoutineDetails"
+            (click)="excluirRotina()"
+          >
+            Excluir rotina
+          </button>
+          <div class="group relative">
+            <button
+              type="button"
+              aria-label="Resetar rotina"
+              aria-describedby="limpar-campos-tooltip"
+              class="flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-slate-700 bg-slate-950 text-lg text-slate-100 outline-none transition hover:border-cyan-400/60 hover:bg-cyan-400/10 hover:text-cyan-100 focus-visible:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="isLoadingRoutineDetails"
+              (click)="limparCampos()"
+            >
+              <ng-icon name="heroRefresh"></ng-icon>
+            </button>
+            <span
+              id="limpar-campos-tooltip"
+              role="tooltip"
+              class="pointer-events-none absolute bottom-full right-0 z-20 mb-3 w-max max-w-[220px] translate-y-1 rounded-xl border border-cyan-400/20 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-100 opacity-0 shadow-xl shadow-slate-950/40 transition duration-150 before:absolute before:right-4 before:top-full before:h-2 before:w-2 before:-translate-y-1 before:rotate-45 before:border-b before:border-r before:border-cyan-400/20 before:bg-slate-950 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
+            >
+              Resetar rotina
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5">
         <span
-          class="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
+          class="mb-3 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
         >
           Rotinas salvas
         </span>
-        <div class="select-wrapper">
-          <select
-            class="custom-select"
-            [value]="selectedRoutineId || ''"
-            (change)="carregarRotina($any($event.target).value)"
-          >
-            <option value="">Selecionar</option>
-            <option *ngFor="let rotina of rotinasSalvas" [value]="rotina.id">
-              {{ rotina.nome }}
-            </option>
-          </select>
+        <div
+          *ngIf="
+            !isLoadingRoutines && rotinasSalvas.length === 0;
+            else routineCards
+          "
+          class="routine-card routine-card--empty"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-2xl text-cyan-300"
+            >
+              <ng-icon name="heroClipboardList"></ng-icon>
+            </div>
+            <div>
+              <p class="routine-card__title">Nenhuma rotina salva ainda</p>
+              <p class="routine-card__muscles mt-1 max-w-none">
+                Dê um nome à sua rotina e clique em "Adicionar rotina" para
+                vê-la aqui.
+              </p>
+            </div>
+          </div>
         </div>
-      </label>
 
-      <button
-        type="button"
-        class="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-400/20"
-        (click)="excluirRotina()"
-      >
-        Excluir rotina
-      </button>
+        <ng-template #routineCards>
+          <div class="routine-card-strip" aria-label="Rotinas salvas">
+            <button
+              *ngFor="let rotina of rotinasSalvas; trackBy: trackByRotina"
+              type="button"
+              class="routine-card"
+              [class.routine-card--active]="
+                rotina.id === selectedRoutineId ||
+                rotina.id === loadingRoutineId
+              "
+              [disabled]="isLoadingRoutineDetails"
+              (click)="selecionarRotina(rotina.id)"
+            >
+              <span class="routine-card__title">
+                {{ rotinaCardTitle(rotina) }}
+              </span>
+              <span class="routine-card__count">
+                {{ totalExercicios(rotina) }}
+                {{ totalExercicios(rotina) === 1 ? 'exercício' : 'exercícios' }}
+              </span>
+              <span class="routine-card__muscles">
+                {{ gruposMusculares(rotina) }}
+              </span>
+            </button>
+          </div>
+        </ng-template>
+      </div>
     </div>
 
     <div class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
