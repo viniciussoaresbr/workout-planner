@@ -84,6 +84,15 @@ export class RotinaBuilderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMusculos();
+
+    this.musculoControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.buscaControl.value) {
+          this.buscaControl.setValue('');
+        }
+      });
+
     combineLatest([
       this.buscaControl.valueChanges.pipe(
         startWith(this.buscaControl.value),
