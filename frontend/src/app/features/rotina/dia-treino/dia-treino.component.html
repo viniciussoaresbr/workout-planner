@@ -45,6 +45,10 @@
           <input
             type="number"
             min="1"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            (keypress)="onKeyPress($event)"
+            (paste)="onPaste($event)"
             [(ngModel)]="exercicio.series"
             class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-cyan-400"
           />
@@ -58,6 +62,10 @@
           <input
             type="number"
             min="1"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            (keypress)="onKeyPress($event)"
+            (paste)="onPaste($event)"
             [(ngModel)]="exercicio.repeticoes"
             class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-cyan-400"
           />
