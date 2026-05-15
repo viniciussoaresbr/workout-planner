@@ -29,6 +29,20 @@ export class DiaTreinoComponent {
     this.removeExercise.emit({ diaId: this.dia.id, uid });
   }
 
+  onKeyPress(event: KeyboardEvent): void {
+    const isNumber = /[0-9]/.test(event.key);
+    if (!isNumber) {
+      event.preventDefault();
+    }
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    const pasteData = event.clipboardData?.getData('text');
+    if (pasteData && !/^\d+$/.test(pasteData)) {
+      event.preventDefault();
+    }
+  }
+
   trackByExercicio(_: number, exercicio: ExercicioRotina): string {
     return exercicio.uid || exercicio.id;
   }
