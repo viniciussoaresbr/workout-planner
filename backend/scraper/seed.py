@@ -24,7 +24,12 @@ EXERCICIOS_EXEMPLO = [
 {"nome": "Crossover na polia alta", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crossover na polia alta."},
 {"nome": "Crossover na polia baixa", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crossover na polia baixa."},
 {"nome": "Peck deck", "musculo_alvo": "Peito", "descricao": "Execução do exercício Peck deck."},
-
+{"nome": "Supino inclinado na máquina", "musculo_alvo": "Peito", "descricao": "Execução do exercício Supino inclinado em máquina guiada."},
+{"nome": "Crossover com banco", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crossover com apoio em banco para melhor isolamento do peitoral."},
+{"nome": "Paralela para peito", "musculo_alvo": "Peito", "descricao": "Execução de paralela com inclinação do tronco para foco em peitoral."},
+{"nome": "Crucifixo inclinado no crossover", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crucifixo inclinado utilizando polia crossover."},
+{"nome": "Supino declinado na máquina", "musculo_alvo": "Peito", "descricao": "Execução do exercício Supino declinado em máquina guiada."},
+ 
 # ================= COSTAS =================
 {"nome": "Puxada frontal na polia", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada frontal na polia."},
 {"nome": "Puxada aberta na polia", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada aberta na polia."},
@@ -35,7 +40,10 @@ EXERCICIOS_EXEMPLO = [
 {"nome": "Remada baixa na polia", "musculo_alvo": "Costas", "descricao": "Execução do exercício Remada baixa na polia."},
 {"nome": "Barra fixa pronada", "musculo_alvo": "Costas", "descricao": "Execução do exercício Barra fixa pronada."},
 {"nome": "Barra fixa supinada", "musculo_alvo": "Costas", "descricao": "Execução do exercício Barra fixa supinada."},
-
+{"nome": "Puxada alta convergente", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada alta em máquina convergente."},
+{"nome": "Remada máquina unilateral", "musculo_alvo": "Costas", "descricao": "Execução do exercício Remada em máquina de forma unilateral."},
+{"nome": "Puxada fechada com triângulo", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada fechada na polia utilizando triângulo."},
+ 
 # ================= PERNAS =================
 {"nome": "Agachamento livre", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Agachamento livre."},
 {"nome": "Agachamento com barra", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Agachamento com barra."},
@@ -47,7 +55,12 @@ EXERCICIOS_EXEMPLO = [
 {"nome": "Cadeira extensora", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Cadeira extensora."},
 {"nome": "Mesa flexora", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Mesa flexora."},
 {"nome": "Stiff com halteres", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Stiff com halteres."},
-
+{"nome": "Levantamento sumô na máquina", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Levantamento sumô em máquina guiada."},
+{"nome": "Stiff com barra", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Stiff com barra."},
+{"nome": "Agachamento hack 45", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Agachamento hack na máquina 45 graus."},
+{"nome": "Cadeira flexora", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Cadeira flexora para isquiotibiais."},
+{"nome": "Flexora em pé unilateral", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Flexora em pé de forma unilateral."},
+ 
 # ================= OMBROS =================
 {"nome": "Desenvolvimento com barra", "musculo_alvo": "Ombros", "descricao": "Execução do exercício Desenvolvimento com barra."},
 {"nome": "Desenvolvimento com halteres", "musculo_alvo": "Ombros", "descricao": "Execução do exercício Desenvolvimento com halteres."},
@@ -55,50 +68,42 @@ EXERCICIOS_EXEMPLO = [
 {"nome": "Elevação lateral na polia", "musculo_alvo": "Ombros", "descricao": "Execução do exercício Elevação lateral na polia."},
 {"nome": "Elevação frontal com halteres", "musculo_alvo": "Ombros", "descricao": "Execução do exercício Elevação frontal com halteres."},
 {"nome": "Face pull na polia", "musculo_alvo": "Ombros", "descricao": "Execução do exercício Face pull na polia."},
-
+ 
 # ================= BÍCEPS =================
 {"nome": "Rosca direta com barra", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca direta com barra."},
 {"nome": "Rosca direta com barra EZ", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca direta com barra EZ."},
 {"nome": "Rosca alternada com halteres", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca alternada com halteres."},
 {"nome": "Rosca martelo", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca martelo."},
 {"nome": "Rosca concentrada", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca concentrada."},
-
+{"nome": "Rosca Scott na máquina", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca Scott em máquina ou polia."},
+{"nome": "Rosca 45", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca 45 graus com halteres no banco inclinado."},
+ 
 # ================= TRÍCEPS =================
 {"nome": "Tríceps pulley com corda", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps pulley com corda."},
 {"nome": "Tríceps pulley com barra", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps pulley com barra."},
 {"nome": "Tríceps francês com halter", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps francês com halter."},
 {"nome": "Tríceps testa com barra EZ", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps testa com barra EZ."},
 {"nome": "Mergulho no banco", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Mergulho no banco."},
-
+{"nome": "Tríceps coice na polia", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps coice utilizando polia."},
+ 
 # ================= CORE =================
 {"nome": "Prancha isométrica", "musculo_alvo": "Core", "descricao": "Execução do exercício Prancha isométrica."},
 {"nome": "Prancha lateral", "musculo_alvo": "Core", "descricao": "Execução do exercício Prancha lateral."},
 {"nome": "Crunch abdominal", "musculo_alvo": "Core", "descricao": "Execução do exercício Crunch abdominal."},
 {"nome": "Abdominal infra no banco", "musculo_alvo": "Core", "descricao": "Execução do exercício Abdominal infra no banco."},
 {"nome": "Elevação de pernas suspenso", "musculo_alvo": "Core", "descricao": "Execução do exercício Elevação de pernas suspenso."},
-
+ 
 # ================= GLÚTEOS =================
 {"nome": "Hip thrust com barra", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Hip thrust com barra."},
 {"nome": "Ponte de glúteos", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Ponte de glúteos."},
 {"nome": "Glúteo no cabo", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Glúteo no cabo."},
 {"nome": "Afundo búlgaro", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Afundo búlgaro."},
-
+{"nome": "Elevação pélvica na máquina", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Elevação pélvica em máquina."},
+ 
 # ================= PANTURRILHA =================
 {"nome": "Panturrilha em pé", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha em pé."},
 {"nome": "Panturrilha sentado", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha sentado."},
 {"nome": "Panturrilha no leg press", "musculo_alvo": "Panturrilha", "descricao": "Execução do exercício Panturrilha no leg press."},
-
-# ================= NOVOS EXERCÍCIOS =================
-{"nome": "Supino inclinado na máquina", "musculo_alvo": "Peito", "descricao": "Execução do exercício Supino inclinado em máquina guiada."},
-{"nome": "Crossover com banco", "musculo_alvo": "Peito", "descricao": "Execução do exercício Crossover com apoio em banco para melhor isolamento do peitoral."},
-{"nome": "Paralela para peito", "musculo_alvo": "Peito", "descricao": "Execução de paralela com inclinação do tronco para foco em peitoral."},
-{"nome": "Puxada alta convergente", "musculo_alvo": "Costas", "descricao": "Execução do exercício Puxada alta em máquina convergente."},
-{"nome": "Remada máquina unilateral", "musculo_alvo": "Costas", "descricao": "Execução do exercício Remada em máquina de forma unilateral."},
-{"nome": "Levantamento sumô na máquina", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Levantamento sumô em máquina guiada."},
-{"nome": "Stiff com barra", "musculo_alvo": "Pernas", "descricao": "Execução do exercício Stiff com barra."},
-{"nome": "Elevação pélvica na máquina", "musculo_alvo": "Glúteos", "descricao": "Execução do exercício Elevação pélvica em máquina."},
-{"nome": "Rosca Scott na máquina", "musculo_alvo": "Bíceps", "descricao": "Execução do exercício Rosca Scott em máquina ou polia."},
-{"nome": "Tríceps coice na polia", "musculo_alvo": "Tríceps", "descricao": "Execução do exercício Tríceps coice utilizando polia."},
 ]
 
 GRUPOS_OBRIGATORIOS = {
