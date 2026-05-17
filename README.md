@@ -4,9 +4,9 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 
 ![Home](./frontend/src/app/assets/screenshots/rotina.png)
 <div align="center">
-  <img src="./frontend/src/app/assets/screenshots/login.png" width="33%" alt="Login" />
-  <img src="./frontend/src/app/assets/screenshots/sem-rotina.png" width="33%" alt="NoRoutine" />
-  <img src="./frontend/src/app/assets/screenshots/drag-and-drop.png" width="33%" alt="DragAndDrop" />
+  <img src="./frontend/src/app/assets/screenshots/login.png" width="32%" alt="Login" />
+  <img src="./frontend/src/app/assets/screenshots/sem-rotina.png" width="32%" alt="NoRoutine" />
+  <img src="./frontend/src/app/assets/screenshots/drag-and-drop.png" width="32%" alt="DragAndDrop" />
 </div>
 
 ## Funcionalidades
