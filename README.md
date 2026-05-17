@@ -3,7 +3,6 @@
 Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e uma camada de seed/scraping para popular a base inicial de exercícios.
 
 ![Home](./frontend/src/app/assets/screenshots/rotina.png)
-
 <div align="center">
   <img src="./frontend/src/app/assets/screenshots/login.png" width="33%" alt="Login" />
   <img src="./frontend/src/app/assets/screenshots/sem-rotina.png" width="33%" alt="NoRoutine" />
