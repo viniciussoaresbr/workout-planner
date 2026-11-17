@@ -1,0 +1,83 @@
+<section
+  class="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.16),transparent_35%),linear-gradient(135deg,#020617,#0f172a_55%,#111827)] px-6 py-10"
+>
+  <div
+    class="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-2xl shadow-cyan-950/30 backdrop-blur-sm lg:grid-cols-[1.1fr_0.9fr]"
+  >
+    <div class="hidden flex-col justify-between bg-cyan-500/10 p-10 lg:flex">
+      <div>
+        <p class="text-sm tracking-[0.35em] text-cyan-300 uppercase">Workout Planner</p>
+        <h1 class="mt-6 text-5xl leading-tight font-black text-white">
+          Monte treinos com foco, ordem e progresso.
+        </h1>
+        <p class="mt-6 max-w-md text-base text-slate-300">
+          Organize seus exercícios, ajuste séries e repetições, e exporte a rotina em planilha.
+        </p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-slate-950/50 p-5 text-sm text-slate-300">
+        Fluxo sugerido: entrar, buscar exercícios, arrastar para os dias da rotina semanal e
+        exportar o plano em <code>.xlsx</code>.
+      </div>
+    </div>
+
+    <div class="p-8 sm:p-10">
+      <div class="mx-auto w-full max-w-md">
+        <h2 class="text-3xl font-bold text-white">Entrar</h2>
+        <p class="mt-2 text-sm text-slate-400">
+          Use suas credenciais para acessar o Workout Planner.
+        </p>
+
+        <form class="mt-8 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-200" for="login-email">
+              E-mail
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              autocomplete="email"
+              formControlName="email"
+              [class]="inputClasses"
+              [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+              aria-describedby="login-email-error"
+              placeholder="voce@exemplo.com"
+            />
+            <app-field-error [control]="form.controls.email" id="login-email-error" />
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-200" for="login-password">
+              Senha
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              autocomplete="current-password"
+              formControlName="password"
+              [class]="inputClasses"
+              [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+              aria-describedby="login-password-error"
+              placeholder="Digite sua senha"
+            />
+            <app-field-error [control]="form.controls.password" id="login-password-error" />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-2xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="submitting()"
+          >
+            {{ submitting() ? 'Entrando...' : 'Entrar' }}
+          </button>
+        </form>
+
+        <p class="mt-6 text-sm text-slate-400">
+          Ainda não tem conta?
+          <a routerLink="/register" class="font-semibold text-cyan-300 hover:text-cyan-200">
+            Criar cadastro
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

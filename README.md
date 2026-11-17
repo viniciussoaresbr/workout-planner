@@ -30,18 +30,19 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 
 ### Frontend
 
-- Angular 14
-- TypeScript
-- Tailwind CSS
+- Angular 22 (componentes standalone, signals, sem zone.js)
+- TypeScript 6
+- Tailwind CSS 4
+- Angular CDK (drag and drop)
 - RxJS
-- Angular Router
 
 ### Ferramentas de apoio
 
 - Uvicorn
 - Pytest
 - Ruff (lint e formatação)
-- Karma / Jasmine
+- Vitest
+- Prettier
 - npm
 
 ## Como Rodar o Projeto Localmente
@@ -51,7 +52,7 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 Antes de começar, tenha instalado na máquina:
 
 - Python 3.12+
-- Node.js e npm
+- Node.js 24.15+ (há um `.nvmrc` em `frontend/`; com nvm, basta `nvm use`) e npm
 - PostgreSQL
 
 Opcionalmente, você também pode usar Docker apenas para subir o banco local.
@@ -132,6 +133,7 @@ Abra um novo terminal e entre na pasta do frontend:
 
 ```bash
 cd frontend
+nvm use   # opcional: seleciona a versão do Node definida em .nvmrc
 ```
 
 Instale as dependências:
@@ -179,10 +181,13 @@ alembic check          # confere se os modelos estão em sincronia com as migra�
 
 ### Frontend
 
-Gerar build de produção:
+Dentro de `frontend/`:
 
 ```bash
-npm run build
+npm test               # testes unitários (Vitest)
+npm run build          # build de produção em dist/
+npm run format         # formata o código com Prettier
+npm run format:check   # confere a formatação (útil em CI)
 ```
 
 ## Observações

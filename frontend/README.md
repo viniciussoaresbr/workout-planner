@@ -1,27 +1,51 @@
-# Frontend
+# Workout Planner — Frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.0.
+Aplicação Angular 22 (standalone, signals, sem zone.js) com Tailwind CSS 4.
+Instruções completas de execução no [README principal](../README.md).
 
-## Development server
+## Comandos
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+```bash
+nvm use              # Node definido em .nvmrc (Angular 22 exige Node 24.15+)
+npm install
+npm start            # http://localhost:4200
+npm test             # testes unitários (Vitest)
+npm run build        # build de produção em dist/
+npm run format       # Prettier
+```
 
-## Code scaffolding
+A URL da API fica em `src/environments/environment.ts`.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Estrutura
 
-## Build
+```
+src/app/
+  core/                      Infraestrutura usada pela aplicação inteira
+    api/                     Envelope de resposta da API e token API_URL
+    auth/                    AuthService, guards, interceptor do token, leitura de JWT
+    http/                    Interceptor global de erros e extração de mensagens
+    notifications/           Toasts (serviço com signals + contêiner)
+  shared/                    Peças reutilizáveis sem regra de negócio
+    forms/                   Exibição de erros de validação
+    utils/                   Confirmação e download de arquivos
+  features/
+    auth/                    Telas de login e cadastro
+    rotina/
+      data/                  Modelos, DTOs da API, mapeamento e clientes HTTP
+      state/                 RotinaEditorStore: estado e regras do editor (signals)
+      rotina-builder/        Página: compõe os componentes e liga o drag and drop ao store
+      exercicio-library/     Biblioteca com filtro por grupo muscular e busca
+      dia-treino/            Card de um dia com séries/repetições editáveis
+      rotinas-salvas/        Faixa de cards das rotinas salvas
+src/testing/                 Utilitários e dados de teste
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+### Convenções
 
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+- **Estado**: a página fornece o `RotinaEditorStore`; os componentes filhos são
+  apresentacionais (`input()`/`output()`) e não acessam a API diretamente — exceto a
+  biblioteca, que é autocontida.
+- **Erros HTTP**: o `errorInterceptor` exibe a mensagem enviada pela API e encerra a sessão
+  em 401. Requisições que tratam o próprio erro usam `skipGlobalErrorHandling()`.
+- **Componentes**: `ChangeDetectionStrategy.OnPush`, controle de fluxo nativo
+  (`@if`/`@for`) e rotas com `loadComponent` (carregamento sob demanda).

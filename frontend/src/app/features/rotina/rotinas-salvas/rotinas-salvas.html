@@ -1,0 +1,44 @@
+<span class="mb-3 block text-xs font-semibold tracking-[0.25em] text-slate-500 uppercase">
+  Rotinas salvas
+</span>
+
+@if (!loading() && !rotinas().length) {
+  <div class="routine-card routine-card--empty">
+    <div class="flex items-center gap-4">
+      <div
+        class="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-2xl text-cyan-300"
+      >
+        <ng-icon name="heroClipboardDocumentList" />
+      </div>
+      <div>
+        <p class="routine-card__title">Nenhuma rotina salva ainda</p>
+        <p class="routine-card__muscles mt-1">
+          Dê um nome à sua rotina e clique em "Adicionar rotina" para vê-la aqui.
+        </p>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="routine-card-strip" role="list" aria-label="Rotinas salvas">
+    @for (rotina of rotinas(); track rotina.id) {
+      <button
+        type="button"
+        role="listitem"
+        class="routine-card"
+        [class.routine-card--active]="rotina.id === selectedId() || rotina.id === loadingId()"
+        [attr.aria-current]="rotina.id === selectedId() ? 'true' : null"
+        [disabled]="disabled()"
+        (click)="selected.emit(rotina.id)"
+      >
+        <span class="routine-card__title">{{ rotina.nome }}</span>
+        <span class="routine-card__count">
+          {{ rotina.totalExercicios }}
+          {{ rotina.totalExercicios === 1 ? 'exercício' : 'exercícios' }}
+        </span>
+        <span class="routine-card__muscles">
+          {{ rotina.grupos.length ? rotina.grupos.join(' · ') : 'Sem grupos musculares' }}
+        </span>
+      </button>
+    }
+  </div>
+}
