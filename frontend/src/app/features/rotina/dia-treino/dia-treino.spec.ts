@@ -29,7 +29,7 @@ describe('DiaTreinoCard', () => {
   it('mostra o estado vazio', async () => {
     const { element } = await render({ key: 'd1', nome: 'Segunda', itens: [] });
 
-    expect(element.textContent).toContain('Arraste exercícios para este dia.');
+    expect(element.textContent).toContain('Solte exercícios aqui');
     expect(element.textContent).toContain('0/10');
   });
 

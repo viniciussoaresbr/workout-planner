@@ -82,6 +82,7 @@ export function toResumo(rotina: Rotina): RotinaResumo {
     id: rotina.id,
     nome: rotina.nome,
     totalExercicios: itens.length,
+    diasComTreino: rotina.dias.filter(dia => dia.itens.length > 0).length,
     grupos: [...new Set(itens.map(item => item.exercicio.musculo))],
   };
 }

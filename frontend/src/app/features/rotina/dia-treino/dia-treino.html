@@ -1,17 +1,21 @@
-<section class="rounded-3xl border border-white/10 bg-slate-900/80 p-4">
-  <header class="mb-4">
-    <h3 class="text-lg font-bold text-white">{{ dia().nome }}</h3>
-    <p class="text-xs tracking-[0.3em] text-slate-500 uppercase">
+<section class="rounded-xl border border-white/[0.06] bg-surface/60 p-3">
+  <header class="mb-2.5 flex items-baseline justify-between gap-2 px-1">
+    <h3 class="font-semibold tracking-tight text-white">{{ dia().nome }}</h3>
+    <span
+      class="text-xs text-slate-500 tabular-nums"
+      [class.text-amber-300]="!acceptsMore()"
+      [attr.aria-label]="dia().itens.length + ' de ' + maxItens + ' exercícios'"
+    >
       {{ dia().itens.length }}/{{ maxItens }}
-      {{ dia().itens.length === 1 ? 'exercício' : 'exercícios' }}
-    </p>
+    </span>
   </header>
 
   <div
     cdkDropList
     [cdkDropListData]="dia().key"
     [cdkDropListEnterPredicate]="canEnter"
-    class="min-h-48 space-y-3 rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 p-3"
+    class="drop-zone flex min-h-20 flex-col gap-2 rounded-lg"
+    [class.drop-zone--empty]="!dia().itens.length"
     [attr.aria-label]="'Exercícios de ' + dia().nome"
     (cdkDropListDropped)="dropped.emit($event)"
   >
@@ -19,58 +23,54 @@
       <article
         cdkDrag
         [cdkDragData]="item"
-        class="cursor-grab rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 active:cursor-grabbing"
+        class="group/item cursor-grab rounded-lg border border-white/[0.06] bg-surface-raised/80 px-3 py-2.5 transition-colors hover:border-line active:cursor-grabbing"
       >
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="font-semibold text-white">{{ item.exercicio.nome }}</p>
-            <p class="text-sm text-cyan-300">{{ item.exercicio.musculo }}</p>
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="line-clamp-2 text-sm leading-5 font-medium text-white">
+              {{ item.exercicio.nome }}
+            </p>
+            <p class="text-xs text-slate-500">{{ item.exercicio.musculo }}</p>
           </div>
           <button
             type="button"
-            class="flex items-center justify-center rounded-md border border-rose-400/30 bg-rose-400/10 p-1 text-lg text-rose-200 transition hover:bg-rose-400/20"
+            class="icon-btn -mt-1 -mr-1.5 shrink-0 hover:text-rose-300! sm:opacity-0 sm:group-hover/item:opacity-100 sm:focus-visible:opacity-100"
             [attr.aria-label]="'Remover ' + item.exercicio.nome + ' de ' + dia().nome"
             (click)="removed.emit(item.uid)"
           >
-            <ng-icon name="heroTrash" />
+            <ng-icon name="heroXMark" />
           </button>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-3">
-          <label class="block">
-            <span class="mb-2 block text-xs tracking-[0.25em] text-slate-500 uppercase">
-              Séries
-            </span>
-            <input
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              [maxLength]="maxDigits"
-              [value]="item.series ?? ''"
-              [attr.aria-invalid]="isInvalid(item.series)"
-              class="count-input"
-              (input)="onCountInput(item, 'series', $event)"
-            />
-          </label>
-          <label class="block">
-            <span class="mb-2 block text-xs tracking-[0.25em] text-slate-500 uppercase">
-              Reps
-            </span>
-            <input
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              [maxLength]="maxDigits"
-              [value]="item.repeticoes ?? ''"
-              [attr.aria-invalid]="isInvalid(item.repeticoes)"
-              class="count-input"
-              (input)="onCountInput(item, 'repeticoes', $event)"
-            />
-          </label>
+        <div class="mt-2 flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500">
+          <input
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            class="count-input"
+            [maxLength]="maxDigits"
+            [value]="item.series ?? ''"
+            [attr.aria-invalid]="isInvalid(item.series)"
+            [attr.aria-label]="'Séries de ' + item.exercicio.nome"
+            (input)="onCountInput(item, 'series', $event)"
+          />
+          <span>séries ×</span>
+          <input
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            class="count-input"
+            [maxLength]="maxDigits"
+            [value]="item.repeticoes ?? ''"
+            [attr.aria-invalid]="isInvalid(item.repeticoes)"
+            [attr.aria-label]="'Repetições de ' + item.exercicio.nome"
+            (input)="onCountInput(item, 'repeticoes', $event)"
+          />
+          <span>reps</span>
         </div>
       </article>
     } @empty {
-      <p class="py-8 text-center text-sm text-slate-500">Arraste exercícios para este dia.</p>
+      <p class="m-auto px-2 py-5 text-center text-xs text-slate-500">Solte exercícios aqui</p>
     }
   </div>
 </section>

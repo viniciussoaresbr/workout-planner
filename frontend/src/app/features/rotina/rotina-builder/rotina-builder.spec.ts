@@ -89,7 +89,7 @@ describe('RotinaBuilder', () => {
   it('renderiza a biblioteca com os exercícios do primeiro grupo', async () => {
     await vi.waitFor(() => {
       TestBed.tick();
-      const nomes = [...document.querySelectorAll('app-exercicio-library h3')].map(h =>
+      const nomes = [...document.querySelectorAll('app-exercicio-library article span')].map(h =>
         h.textContent?.trim(),
       );
       expect(nomes).toEqual([SUPINO.nome]);

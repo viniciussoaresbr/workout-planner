@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { heroClipboardDocumentList } from '@ng-icons/heroicons/outline';
+import { heroPlus } from '@ng-icons/heroicons/outline';
 
 import { RotinaResumo } from '../data/rotina.models';
 
 @Component({
   selector: 'app-rotinas-salvas',
   imports: [NgIcon],
-  providers: [provideIcons({ heroClipboardDocumentList })],
+  providers: [provideIcons({ heroPlus })],
+  host: { class: 'block' },
   templateUrl: './rotinas-salvas.html',
-  styleUrl: './rotinas-salvas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RotinasSalvas {
@@ -20,4 +20,7 @@ export class RotinasSalvas {
   readonly disabled = input(false);
 
   readonly selected = output<string>();
+  readonly novaRotina = output<void>();
+
+  protected readonly skeletons = Array.from({ length: 3 });
 }

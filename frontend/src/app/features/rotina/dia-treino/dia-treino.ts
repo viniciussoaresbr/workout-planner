@@ -1,7 +1,7 @@
 import { CdkDrag, CdkDropList } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { heroTrash } from '@ng-icons/heroicons/outline';
+import { heroXMark } from '@ng-icons/heroicons/outline';
 
 import { DiaTreino, ItemTreino, ROTINA_LIMITS } from '../data/rotina.models';
 import { RotinaDrop } from '../drag-drop';
@@ -23,8 +23,9 @@ export function parseCountInput(raw: string): { text: string; value: number | nu
 @Component({
   selector: 'app-dia-treino',
   imports: [CdkDropList, CdkDrag, NgIcon],
-  providers: [provideIcons({ heroTrash })],
+  providers: [provideIcons({ heroXMark })],
   templateUrl: './dia-treino.html',
+  styleUrl: './dia-treino.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiaTreinoCard {

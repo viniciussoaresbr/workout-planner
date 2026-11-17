@@ -27,7 +27,8 @@ src/app/
     notifications/           Toasts (serviço com signals + contêiner)
   shared/                    Peças reutilizáveis sem regra de negócio
     forms/                   Exibição de erros de validação
-    utils/                   Confirmação e download de arquivos
+    ui/                      Marca do produto
+    utils/                   Diálogo de confirmação e download de arquivos
   features/
     auth/                    Telas de login e cadastro
     rotina/
@@ -47,5 +48,8 @@ src/testing/                 Utilitários e dados de teste
   biblioteca, que é autocontida.
 - **Erros HTTP**: o `errorInterceptor` exibe a mensagem enviada pela API e encerra a sessão
   em 401. Requisições que tratam o próprio erro usam `skipGlobalErrorHandling()`.
+- **Estilo**: tokens de cor e fonte (Geist) ficam no `@theme` de `src/styles.css`, com uma
+  única cor de destaque (`brand`). Classes reutilizáveis (`.btn`, `.field`, `.chip`, `.card`,
+  `.panel`) ficam em `@layer components`, para que utilities do Tailwind possam sobrescrevê-las.
 - **Componentes**: `ChangeDetectionStrategy.OnPush`, controle de fluxo nativo
   (`@if`/`@for`) e rotas com `loadComponent` (carregamento sob demanda).

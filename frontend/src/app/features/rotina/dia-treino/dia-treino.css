@@ -1,0 +1,18 @@
+.drop-zone {
+  transition:
+    background-color 200ms,
+    outline-color 200ms;
+  outline: 1px dashed transparent;
+  outline-offset: 0;
+}
+
+.drop-zone--empty {
+  outline-color: var(--color-line);
+}
+
+/* Destaca o dia que pode receber o exercício enquanto algo é arrastado. */
+.drop-zone.cdk-drop-list-receiving,
+.drop-zone.cdk-drop-list-dragging {
+  outline-color: color-mix(in oklch, var(--color-brand-400) 60%, transparent);
+  background-color: color-mix(in oklch, var(--color-brand-400) 6%, transparent);
+}

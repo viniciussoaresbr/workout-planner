@@ -30,7 +30,7 @@ describe('RotinaEditorStore', () => {
       exportarPlanilha: vi.fn(() => of({ blob: new Blob(['x']), filename: 'rotina-a.xlsx' })),
     };
     toast = { success: vi.fn(), warning: vi.fn() };
-    confirm = { ask: vi.fn(() => true) };
+    confirm = { ask: vi.fn(async () => true) };
     downloader = { download: vi.fn() };
 
     TestBed.configureTestingModule({
@@ -48,7 +48,7 @@ describe('RotinaEditorStore', () => {
   const segunda = () => store.dias()[0];
 
   describe('edição', () => {
-    it('começa com os 7 dias da semana vazios e sem alterações', () => {
+    it('começa com os 7 dias da semana vazios e sem alterações', async () => {
       expect(store.dias().map(dia => dia.nome)).toEqual([
         'Segunda',
         'Terça',
@@ -61,7 +61,7 @@ describe('RotinaEditorStore', () => {
       expect(store.hasUnsavedChanges()).toBe(false);
     });
 
-    it('cria ocorrências independentes ao adicionar o mesmo exercício duas vezes', () => {
+    it('cria ocorrências independentes ao adicionar o mesmo exercício duas vezes', async () => {
       store.insertFromLibrary(SUPINO, segunda().key, 0);
       store.insertFromLibrary(SUPINO, segunda().key, 1);
       const [a, b] = segunda().itens;
@@ -74,7 +74,7 @@ describe('RotinaEditorStore', () => {
       expect(segunda().itens[0]).toMatchObject({ uid: a.uid, series: 6 });
     });
 
-    it('adiciona ao primeiro dia com espaço e respeita o limite por dia', () => {
+    it('adiciona ao primeiro dia com espaço e respeita o limite por dia', async () => {
       for (let i = 0; i < ROTINA_LIMITS.exerciciosPorDia; i++) {
         expect(store.addToFirstAvailableDay(SUPINO)?.nome).toBe('Segunda');
       }
@@ -84,7 +84,7 @@ describe('RotinaEditorStore', () => {
       expect(store.insertFromLibrary(AGACHAMENTO, segunda().key, 0)).toBe(false);
     });
 
-    it('retorna null quando todos os dias estão cheios', () => {
+    it('retorna null quando todos os dias estão cheios', async () => {
       const total = ROTINA_LIMITS.exerciciosPorDia * 7;
       for (let i = 0; i < total; i++) {
         store.addToFirstAvailableDay(SUPINO);
@@ -93,7 +93,7 @@ describe('RotinaEditorStore', () => {
       expect(store.addToFirstAvailableDay(SUPINO)).toBeNull();
     });
 
-    it('reordena dentro do dia e transfere entre dias', () => {
+    it('reordena dentro do dia e transfere entre dias', async () => {
       const [seg, ter] = store.dias();
       store.insertFromLibrary(SUPINO, seg.key, 0);
       store.insertFromLibrary(AGACHAMENTO, seg.key, 1);
@@ -106,7 +106,7 @@ describe('RotinaEditorStore', () => {
       expect(store.dias()[1].itens.map(item => item.exercicio.id)).toEqual([SUPINO.id]);
     });
 
-    it('não transfere para um dia cheio', () => {
+    it('não transfere para um dia cheio', async () => {
       const [seg, ter] = store.dias();
       for (let i = 0; i < ROTINA_LIMITS.exerciciosPorDia; i++) {
         store.insertFromLibrary(SUPINO, ter.key, i);
@@ -117,7 +117,7 @@ describe('RotinaEditorStore', () => {
       expect(segunda().itens).toHaveLength(1);
     });
 
-    it('valida nome e valores de séries/repetições', () => {
+    it('valida nome e valores de séries/repetições', async () => {
       expect(store.validationError()).toBe('Dê um nome à rotina.');
 
       store.nome.set('AB');
@@ -133,23 +133,29 @@ describe('RotinaEditorStore', () => {
   });
 
   describe('persistência', () => {
-    it('carrega as rotinas e exibe os resumos', () => {
+    it('carrega as rotinas e exibe os resumos', async () => {
       store.loadRotinas();
 
       expect(store.resumos()).toEqual([
-        { id: 'rotina-1', nome: 'Treino A', totalExercicios: 2, grupos: ['Peito', 'Pernas'] },
+        {
+          id: 'rotina-1',
+          nome: 'Treino A',
+          totalExercicios: 2,
+          diasComTreino: 1,
+          grupos: ['Peito', 'Pernas'],
+        },
       ]);
       expect(store.loadingList()).toBe(false);
     });
 
-    it('não salva rascunho inválido', () => {
+    it('não salva rascunho inválido', async () => {
       store.save();
 
       expect(api.criar).not.toHaveBeenCalled();
       expect(toast.warning).toHaveBeenCalledWith('Dê um nome à rotina.');
     });
 
-    it('cria uma rotina nova, seleciona e marca como salva', () => {
+    it('cria uma rotina nova, seleciona e marca como salva', async () => {
       store.nome.set('Nova');
       store.insertFromLibrary(SUPINO, segunda().key, 0);
 
@@ -162,9 +168,9 @@ describe('RotinaEditorStore', () => {
       expect(store.saving()).toBe(false);
     });
 
-    it('atualiza a rotina selecionada no lugar', () => {
+    it('atualiza a rotina selecionada no lugar', async () => {
       store.loadRotinas();
-      store.select('rotina-1');
+      await store.select('rotina-1');
       store.nome.set('Treino A2');
 
       store.save();
@@ -173,7 +179,7 @@ describe('RotinaEditorStore', () => {
       expect(store.rotinas().map(rotina => rotina.nome)).toEqual(['Treino A2']);
     });
 
-    it('libera o estado de carregamento quando a API falha', () => {
+    it('libera o estado de carregamento quando a API falha', async () => {
       api.criar.mockReturnValue(throwError(() => new Error('falhou')));
       store.nome.set('Nova');
 
@@ -183,7 +189,7 @@ describe('RotinaEditorStore', () => {
       expect(store.selectedId()).toBeNull();
     });
 
-    it('ignora cliques repetidos enquanto salva', () => {
+    it('ignora cliques repetidos enquanto salva', async () => {
       const pending = new Subject<Rotina>();
       api.criar.mockReturnValue(pending);
       store.nome.set('Nova');
@@ -194,18 +200,18 @@ describe('RotinaEditorStore', () => {
       expect(api.criar).toHaveBeenCalledTimes(1);
     });
 
-    it('pede confirmação antes de trocar de rotina com alterações não salvas', () => {
+    it('pede confirmação antes de trocar de rotina com alterações não salvas', async () => {
       store.nome.set('Rascunho');
-      confirm.ask.mockReturnValue(false);
+      confirm.ask.mockResolvedValue(false);
 
-      store.select('rotina-1');
+      await store.select('rotina-1');
 
       expect(api.buscar).not.toHaveBeenCalled();
       expect(store.nome()).toBe('Rascunho');
     });
 
-    it('carrega a rotina escolhida sem marcar alterações', () => {
-      store.select('rotina-1');
+    it('carrega a rotina escolhida sem marcar alterações', async () => {
+      await store.select('rotina-1');
 
       expect(store.selectedId()).toBe('rotina-1');
       expect(store.nome()).toBe('Treino A');
@@ -213,29 +219,31 @@ describe('RotinaEditorStore', () => {
       expect(confirm.ask).not.toHaveBeenCalled();
     });
 
-    it('exclui somente após confirmação', () => {
+    it('exclui somente após confirmação', async () => {
       store.loadRotinas();
-      store.select('rotina-1');
+      await store.select('rotina-1');
 
-      confirm.ask.mockReturnValueOnce(false);
-      store.remove();
+      confirm.ask.mockResolvedValueOnce(false);
+      await store.remove();
       expect(api.excluir).not.toHaveBeenCalled();
 
-      store.remove();
-      expect(confirm.ask).toHaveBeenLastCalledWith(expect.stringContaining('"Treino A"'));
+      await store.remove();
+      expect(confirm.ask).toHaveBeenLastCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('"Treino A"'), tone: 'danger' }),
+      );
       expect(api.excluir).toHaveBeenCalledWith('rotina-1');
       expect(store.rotinas()).toEqual([]);
       expect(store.selectedId()).toBeNull();
       expect(store.nome()).toBe('');
     });
 
-    it('exporta apenas rotinas salvas e sem alterações pendentes', () => {
+    it('exporta apenas rotinas salvas e sem alterações pendentes', async () => {
       store.exportSpreadsheet();
       expect(toast.warning).toHaveBeenLastCalledWith(
         'Salve a rotina antes de exportar a planilha.',
       );
 
-      store.select('rotina-1');
+      await store.select('rotina-1');
       store.nome.set('Mudou');
       store.exportSpreadsheet();
       expect(toast.warning).toHaveBeenLastCalledWith(
@@ -249,11 +257,11 @@ describe('RotinaEditorStore', () => {
       expect(downloader.download).toHaveBeenCalledWith(expect.any(Blob), 'rotina-a.xlsx');
     });
 
-    it('reset volta ao estado inicial após confirmar o descarte', () => {
+    it('reset volta ao estado inicial após confirmar o descarte', async () => {
       store.nome.set('Rascunho');
       store.insertFromLibrary(SUPINO, segunda().key, 0);
 
-      store.reset();
+      await store.reset();
 
       expect(confirm.ask).toHaveBeenCalled();
       expect(store.nome()).toBe('');

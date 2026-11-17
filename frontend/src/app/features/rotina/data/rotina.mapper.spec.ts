@@ -61,6 +61,7 @@ describe('rotina.mapper', () => {
       id: 'rotina-1',
       nome: 'Treino A',
       totalExercicios: 2,
+      diasComTreino: 1,
       grupos: ['Peito', 'Pernas'],
     });
   });

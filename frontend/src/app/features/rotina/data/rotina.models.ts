@@ -38,6 +38,7 @@ export interface RotinaResumo {
   id: string;
   nome: string;
   totalExercicios: number;
+  diasComTreino: number;
   grupos: string[];
 }
 

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { heroPlus } from '@ng-icons/heroicons/outline';
+import { heroMagnifyingGlass, heroPlus } from '@ng-icons/heroicons/outline';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, switchMap } from 'rxjs';
 
 import { Exercicio } from '../data/rotina.models';
@@ -22,7 +22,7 @@ const SEARCH_DEBOUNCE_MS = 250;
 @Component({
   selector: 'app-exercicio-library',
   imports: [CdkDropList, CdkDrag, NgIcon],
-  providers: [provideIcons({ heroPlus })],
+  providers: [provideIcons({ heroMagnifyingGlass, heroPlus })],
   templateUrl: './exercicio-library.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -34,12 +34,17 @@ export class ExercicioLibrary {
 
   protected readonly listId = BIBLIOTECA_LIST;
   protected readonly loading = signal(false);
+  /** Larguras (rem) dos chips e quantidade de linhas exibidas durante o carregamento. */
+  protected readonly skeletonChips = [4, 5.5, 4.5, 3.5, 5, 4];
+  protected readonly skeletonRows = Array.from({ length: 7 });
 
-  protected readonly musculos = toSignal(this.api.listarMusculos().pipe(catchError(() => of([]))), {
-    initialValue: [] as string[],
-  });
+  /** `null` enquanto carrega; lista vazia se a API falhar. */
+  protected readonly musculos = toSignal(
+    this.api.listarMusculos().pipe(catchError(() => of([] as string[]))),
+    { initialValue: null },
+  );
   /** Começa no primeiro grupo disponível; depois segue a escolha do usuário. */
-  protected readonly musculo = linkedSignal(() => this.musculos()[0] ?? '');
+  protected readonly musculo = linkedSignal(() => this.musculos()?.[0] ?? '');
   protected readonly busca = signal('');
 
   private readonly query = computed(() => ({ musculo: this.musculo(), nome: this.busca() }));

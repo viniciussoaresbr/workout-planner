@@ -108,6 +108,21 @@ export class RotinaEditorStore {
     ),
   );
 
+  /** Totais da semana em edição. */
+  readonly semana = computed(() => {
+    const dias = this.dias();
+    return {
+      exercicios: dias.reduce((total, dia) => total + dia.itens.length, 0),
+      diasComTreino: dias.filter(dia => dia.itens.length > 0).length,
+    };
+  });
+  readonly status = computed<'nova' | 'salva' | 'alterada'>(() => {
+    if (this.hasUnsavedChanges()) {
+      return 'alterada';
+    }
+    return this.selectedId() ? 'salva' : 'nova';
+  });
+
   // ---- Edição ----
 
   canAccept(diaKey: string): boolean {
@@ -184,8 +199,8 @@ export class RotinaEditorStore {
     );
   }
 
-  select(id: string): void {
-    if (id === this.selectedId() || this.busy() || !this.confirmDiscard()) {
+  async select(id: string): Promise<void> {
+    if (id === this.selectedId() || this.busy() || !(await this.confirmDiscard())) {
       return;
     }
     this.loadingId.set(id);
@@ -225,17 +240,24 @@ export class RotinaEditorStore {
     );
   }
 
-  remove(): void {
+  async remove(): Promise<void> {
     const id = this.selectedId();
     if (!id) {
       this.toast.warning('Selecione uma rotina salva antes de excluir.');
       return;
     }
+    if (this.deleting()) {
+      return;
+    }
     const nome = this.rotinas().find(rotina => rotina.id === id)?.nome ?? this.nome();
-    if (
-      this.deleting() ||
-      !this.confirm.ask(`Excluir a rotina "${nome}"? Esta ação não pode ser desfeita.`)
-    ) {
+    const confirmed = await this.confirm.ask({
+      title: 'Excluir rotina?',
+      message: `"${nome}" será removida permanentemente. Esta ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir rotina',
+      tone: 'danger',
+    });
+    // A seleção pode ter mudado enquanto o diálogo estava aberto.
+    if (!confirmed || this.selectedId() !== id) {
       return;
     }
 
@@ -277,10 +299,23 @@ export class RotinaEditorStore {
   }
 
   /** Começa uma rotina nova, pedindo confirmação se houver alterações não salvas. */
-  reset(): void {
-    if (this.confirmDiscard()) {
+  async reset(): Promise<void> {
+    if (await this.confirmDiscard()) {
       this.clear();
     }
+  }
+
+  /** Resolve `true` se não há alterações pendentes ou se o usuário aceitou descartá-las. */
+  confirmDiscard(): Promise<boolean> {
+    if (!this.hasUnsavedChanges()) {
+      return Promise.resolve(true);
+    }
+    return this.confirm.ask({
+      title: 'Descartar alterações?',
+      message: 'Esta rotina tem alterações que ainda não foram salvas.',
+      confirmLabel: 'Descartar',
+      tone: 'danger',
+    });
   }
 
   // ---- Internos ----
@@ -297,13 +332,6 @@ export class RotinaEditorStore {
     this.nome.set(rotina.nome);
     this.dias.set(rotina.dias);
     this.savedSignature.set(draftSignature(rotina));
-  }
-
-  private confirmDiscard(): boolean {
-    return (
-      !this.hasUnsavedChanges() ||
-      this.confirm.ask('Há alterações não salvas nesta rotina. Deseja descartá-las?')
-    );
   }
 
   private updateDia(diaKey: string, change: (itens: ItemTreino[]) => ItemTreino[]): void {

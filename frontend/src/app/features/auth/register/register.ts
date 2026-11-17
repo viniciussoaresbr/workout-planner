@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { getErrorMessage } from '../../../core/http/http-error';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { FieldError } from '../../../shared/forms/field-error';
-import { INPUT_CLASSES } from '../../../shared/forms/form-styles';
+import { AuthLayout } from '../auth-layout';
 
 /** Limites alinhados às validações da API. */
 export const REGISTER_LIMITS = {
@@ -19,7 +19,7 @@ export const REGISTER_LIMITS = {
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, AuthLayout],
   templateUrl: './register.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -28,7 +28,7 @@ export class Register {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  protected readonly inputClasses = `${INPUT_CLASSES} focus:border-emerald-400`;
+  protected readonly limits = REGISTER_LIMITS;
   protected readonly submitting = signal(false);
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: [

@@ -7,11 +7,11 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { getErrorMessage } from '../../../core/http/http-error';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { FieldError } from '../../../shared/forms/field-error';
-import { INPUT_CLASSES } from '../../../shared/forms/form-styles';
+import { AuthLayout } from '../auth-layout';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, AuthLayout],
   templateUrl: './login.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -20,7 +20,6 @@ export class Login {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  protected readonly inputClasses = `${INPUT_CLASSES} focus:border-cyan-400`;
   protected readonly submitting = signal(false);
   protected readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],

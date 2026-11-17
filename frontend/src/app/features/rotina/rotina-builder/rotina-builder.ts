@@ -1,12 +1,16 @@
 import { CdkDropListGroup } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { heroArrowPath } from '@ng-icons/heroicons/outline';
+import {
+  heroArrowDownTray,
+  heroArrowRightStartOnRectangle,
+  heroTrash,
+} from '@ng-icons/heroicons/outline';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/notifications/toast.service';
-import { ConfirmService } from '../../../shared/utils/confirm.service';
+import { Brand } from '../../../shared/ui/brand';
 import { Exercicio, ROTINA_LIMITS } from '../data/rotina.models';
 import { DiaTreinoCard, ItemChange } from '../dia-treino/dia-treino';
 import { BIBLIOTECA_LIST, RotinaDrop } from '../drag-drop';
@@ -14,10 +18,19 @@ import { ExercicioLibrary } from '../exercicio-library/exercicio-library';
 import { RotinasSalvas } from '../rotinas-salvas/rotinas-salvas';
 import { RotinaEditorStore } from '../state/rotina-editor.store';
 
+const STATUS = {
+  nova: { label: 'Nova rotina', dot: 'bg-slate-500' },
+  salva: { label: 'Salva', dot: 'bg-brand-400' },
+  alterada: { label: 'Alterações não salvas', dot: 'bg-amber-400' },
+} as const;
+
 @Component({
   selector: 'app-rotina-builder',
-  imports: [CdkDropListGroup, NgIcon, DiaTreinoCard, ExercicioLibrary, RotinasSalvas],
-  providers: [RotinaEditorStore, provideIcons({ heroArrowPath })],
+  imports: [CdkDropListGroup, NgIcon, Brand, DiaTreinoCard, ExercicioLibrary, RotinasSalvas],
+  providers: [
+    RotinaEditorStore,
+    provideIcons({ heroArrowDownTray, heroArrowRightStartOnRectangle, heroTrash }),
+  ],
   templateUrl: './rotina-builder.html',
   styleUrl: './rotina-builder.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,9 +40,10 @@ export class RotinaBuilder implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
-  private readonly confirm = inject(ConfirmService);
 
   protected readonly nomeMax = ROTINA_LIMITS.nomeMax;
+  protected readonly statusLabel = computed(() => STATUS[this.store.status()].label);
+  protected readonly statusDot = computed(() => STATUS[this.store.status()].dot);
 
   ngOnInit(): void {
     this.store.loadRotinas();
@@ -68,11 +82,8 @@ export class RotinaBuilder implements OnInit {
     this.store.removeItem(diaKey, uid);
   }
 
-  protected logout(): void {
-    const leave =
-      !this.store.hasUnsavedChanges() ||
-      this.confirm.ask('Há alterações não salvas nesta rotina. Deseja sair mesmo assim?');
-    if (!leave) {
+  protected async logout(): Promise<void> {
+    if (!(await this.store.confirmDiscard())) {
       return;
     }
     this.auth.logout();
