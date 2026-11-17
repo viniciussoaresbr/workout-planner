@@ -1,49 +1,54 @@
-import os
+from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-from dotenv import load_dotenv
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
-load_dotenv(ENV_FILE)
-
-try:
-    from pydantic_settings import BaseSettings, SettingsConfigDict
-except ImportError:  # pragma: no cover
-    from pydantic import BaseModel
-
-    class BaseSettings(BaseModel):
-        def __init__(self, **data):
-            merged_data = {
-                "database_url": data.get("database_url") or os.getenv("DATABASE_URL"),
-                "jwt_secret_key": data.get("jwt_secret_key") or os.getenv("JWT_SECRET_KEY"),
-                "jwt_algorithm": data.get("jwt_algorithm") or os.getenv("JWT_ALGORITHM", "HS256"),
-                "access_token_expire_minutes": data.get("access_token_expire_minutes")
-                or int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")),
-            }
-            super().__init__(**merged_data)
-
-    def SettingsConfigDict(**kwargs):
-        return kwargs
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    database_url: str
-    jwt_secret_key: str
-    jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60
+    """Configuração da aplicação carregada de variáveis de ambiente e do arquivo .env."""
 
     model_config = SettingsConfigDict(
-        env_file=str(ENV_FILE),
+        env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
-        case_sensitive=False,
         extra="ignore",
     )
 
+    app_name: str = "Workout Planner API"
+    app_version: str = "2.0.0"
+    environment: Literal["development", "test", "production"] = "development"
+    api_v1_prefix: str = "/api/v1"
+    log_level: str = "INFO"
+
+    database_url: str
+    database_echo: bool = False
+
+    jwt_secret_key: SecretStr = Field(min_length=32)
+    jwt_algorithm: Literal["HS256", "HS384", "HS512"] = "HS256"
+    access_token_expire_minutes: int = Field(default=60, gt=0)
+
+    cors_origins: list[str] = ["http://localhost:4200"]
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        """Aceita URLs no formato padrão do PostgreSQL e força o driver psycopg 3."""
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value.removeprefix(prefix)
+        return value
+
     @property
-    def resolved_database_url(self) -> str:
-        if "[YOURPASSWORD]" in self.database_url:
-            return "sqlite:///./workout_planner.db"
-        return self.database_url
+    def is_sqlite(self) -> bool:
+        return self.database_url.startswith("sqlite")
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()  # type: ignore[call-arg]  # valores obrigatórios vêm do ambiente
+
+
+settings = get_settings()

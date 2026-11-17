@@ -1,142 +1,53 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, Response, status
 
-from app.core.security import get_current_user
-from app.db.database import get_db
-from app.models.models import DiaRotina, Exercicio, ItemRotina, Rotina, Usuario
-from app.schemas.schemas import MessageResponse, RotinaCreate, RotinaRead, RotinaUpdate, SuccessResponse
+from app.api.deps import CurrentUser, DbSession
+from app.schemas.common import ApiResponse
+from app.schemas.rotina import RotinaCreate, RotinaRead, RotinaUpdate
+from app.services import rotina_service
 
-router = APIRouter(tags=["rotinas"])
+router = APIRouter(prefix="/rotinas", tags=["rotinas"])
 
 
-def _get_rotina_or_404(db: Session, rotina_id: UUID, usuario_id: UUID) -> Rotina:
-    rotina = db.scalar(
-        select(Rotina)
-        .options(
-            joinedload(Rotina.dias)
-            .joinedload(DiaRotina.itens)
-            .joinedload(ItemRotina.exercicio)
-        )
-        .where(Rotina.id == rotina_id, Rotina.usuario_id == usuario_id)
+@router.get("")
+def list_rotinas(db: DbSession, current_user: CurrentUser) -> ApiResponse[list[RotinaRead]]:
+    rotinas = rotina_service.list_for_user(db, current_user.id)
+    return ApiResponse(
+        message="Rotinas listadas com sucesso.",
+        data=[RotinaRead.model_validate(rotina) for rotina in rotinas],
     )
-    if rotina is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rotina nao encontrada.")
-    return rotina
 
 
-def _sync_dias(rotina: Rotina, payload: RotinaCreate | RotinaUpdate, db: Session) -> None:
-    if payload.dias is None:
-        return
-
-    if rotina.id is not None and rotina.dias:
-        rotina.dias.clear()
-        db.flush()
-
-    for dia_payload in sorted(payload.dias, key=lambda dia: dia.ordem):
-        dia = DiaRotina(nome=dia_payload.nome, ordem=dia_payload.ordem)
-        for item_payload in sorted(dia_payload.itens, key=lambda item: item.ordem):
-            exercicio = db.get(Exercicio, item_payload.exercicio_id)
-            if exercicio is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Exercicio {item_payload.exercicio_id} nao encontrado.",
-                )
-            dia.itens.append(
-                ItemRotina(
-                    exercicio_id=item_payload.exercicio_id,
-                    series=item_payload.series,
-                    repeticoes=item_payload.repeticoes,
-                    ordem=item_payload.ordem,
-                )
-            )
-        rotina.dias.append(dia)
-
-
-@router.post("/", response_model=SuccessResponse[RotinaRead], status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_rotina(
-    payload: RotinaCreate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> SuccessResponse[RotinaRead]:
-    rotina = Rotina(
-        usuario_id=current_user.id,
-        nome=payload.nome,
-    )
-    _sync_dias(rotina, payload, db)
-    db.add(rotina)
-    db.commit()
-    db.refresh(rotina)
-    return SuccessResponse(
-        message="Rotina criada com sucesso.",
-        data=_get_rotina_or_404(db, rotina.id, current_user.id),
-    )
+    payload: RotinaCreate, db: DbSession, current_user: CurrentUser
+) -> ApiResponse[RotinaRead]:
+    rotina = rotina_service.create(db, current_user.id, payload)
+    return ApiResponse(message="Rotina criada com sucesso.", data=RotinaRead.model_validate(rotina))
 
 
-@router.get("/", response_model=SuccessResponse[list[RotinaRead]])
-def list_rotinas(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> SuccessResponse[list[RotinaRead]]:
-    rotinas = db.scalars(
-        select(Rotina)
-        .options(
-            joinedload(Rotina.dias)
-            .joinedload(DiaRotina.itens)
-            .joinedload(ItemRotina.exercicio)
-        )
-        .where(Rotina.usuario_id == current_user.id)
-        .order_by(Rotina.criado_em.desc())
-    ).unique().all()
-    return SuccessResponse(message="Rotinas listadas com sucesso.", data=rotinas)
-
-
-@router.get("/{rotina_id}", response_model=SuccessResponse[RotinaRead])
+@router.get("/{rotina_id}")
 def get_rotina(
-    rotina_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> SuccessResponse[RotinaRead]:
-    return SuccessResponse(
-        message="Rotina carregada com sucesso.",
-        data=_get_rotina_or_404(db, rotina_id, current_user.id),
+    rotina_id: UUID, db: DbSession, current_user: CurrentUser
+) -> ApiResponse[RotinaRead]:
+    rotina = rotina_service.get_for_user(db, rotina_id, current_user.id)
+    return ApiResponse(
+        message="Rotina carregada com sucesso.", data=RotinaRead.model_validate(rotina)
     )
 
 
-@router.put("/{rotina_id}", response_model=SuccessResponse[RotinaRead])
+@router.put("/{rotina_id}")
 def update_rotina(
-    rotina_id: UUID,
-    payload: RotinaUpdate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> SuccessResponse[RotinaRead]:
-    rotina = _get_rotina_or_404(db, rotina_id, current_user.id)
-
-    if payload.nome is not None:
-        rotina.nome = payload.nome
-    if payload.dias is not None:
-        _sync_dias(rotina, payload, db)
-
-    db.add(rotina)
-    db.commit()
-    return SuccessResponse(
-        message="Rotina atualizada com sucesso.",
-        data=_get_rotina_or_404(db, rotina.id, current_user.id),
+    rotina_id: UUID, payload: RotinaUpdate, db: DbSession, current_user: CurrentUser
+) -> ApiResponse[RotinaRead]:
+    rotina = rotina_service.update(db, rotina_id, current_user.id, payload)
+    return ApiResponse(
+        message="Rotina atualizada com sucesso.", data=RotinaRead.model_validate(rotina)
     )
 
 
-@router.delete("/{rotina_id}", response_model=SuccessResponse[MessageResponse])
-def delete_rotina(
-    rotina_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> SuccessResponse[MessageResponse]:
-    rotina = _get_rotina_or_404(db, rotina_id, current_user.id)
-    db.delete(rotina)
-    db.commit()
-    return SuccessResponse(
-        message="Rotina removida com sucesso.",
-        data=MessageResponse(message="Rotina removida com sucesso."),
-    )
+@router.delete("/{rotina_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_rotina(rotina_id: UUID, db: DbSession, current_user: CurrentUser) -> Response:
+    rotina_service.delete(db, rotina_id, current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

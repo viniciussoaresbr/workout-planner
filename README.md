@@ -1,6 +1,6 @@
 # Workout Planner
 
-Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e uma camada de seed/scraping para popular a base inicial de exercícios.
+Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e um seed para popular a base inicial de exercícios.
 
 ![Home](./frontend/src/app/assets/screenshots/rotina.png)
 <div align="center">
@@ -15,20 +15,18 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 - Listagem e filtro de exercícios por nome e grupo muscular
 - Criação, edição, consulta e remoção de rotinas de treino
 - Exportação de rotinas para arquivo `.xlsx`
-- Seed automático de exercícios no startup da API
+- Seed idempotente do catálogo de exercícios (`python -m app.seed`)
 
 ## Tecnologias Utilizadas
 
 ### Backend
 
-- Python
-- FastAPI
-- SQLAlchemy
-- Alembic
-- PostgreSQL
-- `python-jose` para autenticação JWT
-- `pandas` e `XlsxWriter` para geração de planilhas
-- `BeautifulSoup4` / scripts de scraper e seed
+- Python 3.12+
+- FastAPI + Pydantic v2
+- SQLAlchemy 2 + Alembic
+- PostgreSQL (driver `psycopg` 3)
+- `PyJWT` para tokens JWT e `pwdlib` (Argon2) para hash de senhas
+- `XlsxWriter` para geração de planilhas
 
 ### Frontend
 
@@ -42,6 +40,7 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 
 - Uvicorn
 - Pytest
+- Ruff (lint e formatação)
 - Karma / Jasmine
 - npm
 
@@ -51,7 +50,7 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 
 Antes de começar, tenha instalado na máquina:
 
-- Python 3
+- Python 3.12+
 - Node.js e npm
 - PostgreSQL
 
@@ -81,44 +80,33 @@ docker run --name workout-planner-db \
 
 ### 4. Configure e rode o backend
 
-Entre na pasta do backend:
+Entre na pasta do backend, crie o ambiente virtual e instale as dependências:
 
 ```bash
 cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements-dev.txt   # ou requirements.txt para apenas executar
 ```
 
-Crie e ative um ambiente virtual:
+Crie o arquivo `backend/.env` a partir do exemplo e ajuste os valores:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+cp .env.example .env
 ```
 
-Instale as dependências:
+| Variável | Descrição |
+| --- | --- |
+| `DATABASE_URL` | URL do PostgreSQL (`postgresql://...` usa o driver psycopg 3 automaticamente) |
+| `JWT_SECRET_KEY` | Segredo do JWT, com no mínimo 32 caracteres |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Validade do token (padrão: 60) |
+| `CORS_ORIGINS` | Lista JSON de origens permitidas (padrão: `["http://localhost:4200"]`) |
 
-```bash
-pip install -r requirements.txt
-```
-
-Crie ou ajuste o arquivo `backend/.env` com valores locais:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/workout_planner"
-JWT_SECRET_KEY="troque-esta-chave-por-um-valor-seguro"
-JWT_ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-```
-
-Observações importantes:
-
-- Use uma chave JWT própria no ambiente local.
-- Evite versionar credenciais reais no repositório.
-- O projeto usa PostgreSQL como banco principal.
-
-Execute as migrações:
+Aplique as migrações e popule o catálogo de exercícios (o seed é idempotente e pode ser executado novamente sempre que o catálogo mudar):
 
 ```bash
 alembic upgrade head
+python -m app.seed
 ```
 
 Inicie a API:
@@ -131,8 +119,7 @@ Com a API em execução:
 
 - Backend: `http://localhost:8000`
 - Swagger UI: `http://localhost:8000/docs`
-
-Observação: no startup, a API cria as tabelas necessárias e sincroniza um conjunto inicial de exercícios no banco.
+- Health checks: `GET /health` (processo no ar) e `GET /health/ready` (verifica o banco)
 
 ### 5. Configure e rode o frontend
 
@@ -176,10 +163,13 @@ Com backend e frontend rodando, o fluxo local fica assim:
 
 ### Backend
 
-Rodar testes:
+Dentro de `backend/`, com o ambiente virtual ativo:
 
 ```bash
-pytest
+pytest                 # testes (usam SQLite em memória, não precisam de banco)
+ruff check .           # lint
+ruff format .          # formatação
+alembic check          # confere se os modelos estão em sincronia com as migrações
 ```
 
 ### Frontend
@@ -193,5 +183,5 @@ npm run build
 ## Observações
 
 - O CORS do backend está configurado para permitir `http://localhost:4200`.
-- O seed inicial de exercícios é executado automaticamente quando a API sobe.
+- A API não cria tabelas nem executa o seed ao subir: use `alembic upgrade head` e `python -m app.seed`.
 - Para manter o ambiente consistente, prefira usar as migrações do Alembic antes de iniciar o desenvolvimento.

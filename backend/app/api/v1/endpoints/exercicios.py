@@ -1,46 +1,40 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from typing import Annotated
 
-from app.db.database import get_db
-from app.models.models import Exercicio
-from app.schemas.schemas import PaginatedExercicioResponse, SuccessResponse
+from fastapi import APIRouter, Query
 
-router = APIRouter(tags=["exercicios"])
+from app.api.deps import DbSession
+from app.schemas.common import ApiResponse, Page
+from app.schemas.exercicio import ExercicioRead
+from app.services import exercicio_service
+
+router = APIRouter(prefix="/exercicios", tags=["exercicios"])
 
 
-@router.get("/", response_model=SuccessResponse[PaginatedExercicioResponse])
+@router.get("")
 def list_exercicios(
-    page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=10, ge=1, le=100),
-    nome: str | None = Query(default=None),
-    musculo: str | None = Query(default=None),
-    db: Session = Depends(get_db),
-) -> SuccessResponse[PaginatedExercicioResponse]:
-    query = select(Exercicio)
-    count_query = select(func.count()).select_from(Exercicio)
-
-    if nome:
-        ilike_filter = f"%{nome.strip()}%"
-        query = query.where(Exercicio.nome.ilike(ilike_filter))
-        count_query = count_query.where(Exercicio.nome.ilike(ilike_filter))
-
-    if musculo:
-        query = query.where(Exercicio.musculo.ilike(musculo.strip()))
-        count_query = count_query.where(Exercicio.musculo.ilike(musculo.strip()))
-
-    total = db.scalar(count_query) or 0
-    items = db.scalars(
-        query.order_by(Exercicio.nome).offset((page - 1) * page_size).limit(page_size)
-    ).all()
-
-    return SuccessResponse(
+    db: DbSession,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+    nome: Annotated[str | None, Query(max_length=160, description="Busca parcial")] = None,
+    musculo: Annotated[str | None, Query(max_length=120, description="Grupo exato")] = None,
+) -> ApiResponse[Page[ExercicioRead]]:
+    items, total = exercicio_service.list_exercicios(
+        db, page=page, page_size=page_size, nome=nome, musculo=musculo
+    )
+    return ApiResponse(
         message="Exercícios listados com sucesso.",
-        data=PaginatedExercicioResponse(items=items, total=total, page=page, page_size=page_size),
+        data=Page[ExercicioRead](
+            items=[ExercicioRead.model_validate(item) for item in items],
+            total=total,
+            page=page,
+            page_size=page_size,
+        ),
     )
 
 
-@router.get("/musculos", response_model=SuccessResponse[list[str]])
-def list_musculos(db: Session = Depends(get_db)) -> SuccessResponse[list[str]]:
-    musculos = db.scalars(select(Exercicio.musculo).distinct().order_by(Exercicio.musculo)).all()
-    return SuccessResponse(message="Grupos musculares listados com sucesso.", data=list(musculos))
+@router.get("/musculos")
+def list_musculos(db: DbSession) -> ApiResponse[list[str]]:
+    return ApiResponse(
+        message="Grupos musculares listados com sucesso.",
+        data=exercicio_service.list_musculos(db),
+    )

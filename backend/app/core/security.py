@@ -1,67 +1,58 @@
-from datetime import datetime, timedelta, timezone
-from typing import Any
+"""Hash de senhas (Argon2 via pwdlib) e emissão/validação de tokens JWT (PyJWT)."""
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from datetime import UTC, datetime, timedelta
+from functools import lru_cache
+from uuid import UUID
+
+import jwt
+from pwdlib import PasswordHash
 
 from app.core.config import settings
-from app.db.database import get_db
-from app.models.models import Usuario
+from app.core.exceptions import AuthenticationError
 
-# Use pbkdf2_sha256 as the default hash to avoid the current passlib+bcrypt 5.x incompatibility,
-# while still accepting legacy bcrypt hashes if they already exist in the database.
-pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+_password_hash = PasswordHash.recommended()
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+def hash_password(password: str) -> str:
+    return _password_hash.hash(password)
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(password: str, password_hash: str) -> bool:
+    return _password_hash.verify(password, password_hash)
 
 
-def create_token(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload: dict[str, Any] = {"sub": subject, "exp": expires_at}
-    if extra_claims:
-        payload.update(extra_claims)
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+@lru_cache(maxsize=1)
+def _dummy_hash() -> str:
+    return _password_hash.hash("senha-ficticia-para-tempo-constante")
 
 
-def verify_token(token: str) -> dict[str, Any]:
+def burn_password_check() -> None:
+    """Executa uma verificação descartável para que o login de um e-mail inexistente
+    leve o mesmo tempo de um e-mail existente (evita enumeração de usuários por timing)."""
+    _password_hash.verify("senha-invalida", _dummy_hash())
+
+
+def create_access_token(user_id: UUID) -> str:
+    now = datetime.now(UTC)
+    payload = {
+        "sub": str(user_id),
+        "iat": now,
+        "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
+    }
+    return jwt.encode(
+        payload, settings.jwt_secret_key.get_secret_value(), algorithm=settings.jwt_algorithm
+    )
+
+
+def decode_access_token(token: str) -> UUID:
+    """Valida o token e retorna o id do usuário (claim `sub`)."""
     try:
-        return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-    except JWTError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token invalido ou expirado.",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
-) -> Usuario:
-    payload = verify_token(token)
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token invalido.",
-            headers={"WWW-Authenticate": "Bearer"},
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret_key.get_secret_value(),
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["exp", "sub"]},
         )
-
-    user = db.get(Usuario, user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario nao encontrado.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
+        return UUID(payload["sub"])
+    except (jwt.InvalidTokenError, ValueError) as exc:
+        raise AuthenticationError("Token inválido ou expirado.") from exc

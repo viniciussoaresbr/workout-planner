@@ -1,40 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select
+from fastapi import APIRouter, Response
 
-from app.core.security import get_current_user
-from app.db.database import get_db
-from app.models.models import DiaRotina, ItemRotina, Rotina, Usuario
-from app.schemas.schemas import PlanilhaExportRequest
-from app.services.planilha_service import build_workout_workbook
+from app.api.deps import CurrentUser, DbSession
+from app.schemas.rotina import PlanilhaExportRequest
+from app.services import planilha_service, rotina_service
 
-router = APIRouter(tags=["planilha"])
+router = APIRouter(prefix="/planilha", tags=["planilha"])
 
 
-@router.post("/export")
+@router.post(
+    "/export",
+    response_class=Response,
+    responses={200: {"content": {planilha_service.XLSX_MEDIA_TYPE: {}}}},
+)
 def export_planilha(
-    payload: PlanilhaExportRequest,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
-) -> StreamingResponse:
-    rotina = db.scalar(
-        select(Rotina)
-        .options(
-            joinedload(Rotina.dias)
-            .joinedload(DiaRotina.itens)
-            .joinedload(ItemRotina.exercicio)
-        )
-        .where(Rotina.id == payload.rotina_id, Rotina.usuario_id == current_user.id)
-    )
-    if rotina is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rotina nao encontrada.")
-
-    workbook_io = build_workout_workbook(rotina)
-    filename = f"rotina-{rotina.nome.lower().replace(' ', '-')}.xlsx"
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return StreamingResponse(
-        workbook_io,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers=headers,
+    payload: PlanilhaExportRequest, db: DbSession, current_user: CurrentUser
+) -> Response:
+    rotina = rotina_service.get_for_user(db, payload.rotina_id, current_user.id)
+    filename = planilha_service.build_filename(rotina)
+    return Response(
+        content=planilha_service.build_workbook(rotina),
+        media_type=planilha_service.XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
