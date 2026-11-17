@@ -65,17 +65,22 @@ cd workout-planner
 
 ### 3. Suba o banco de dados PostgreSQL
 
-Se você já possui um PostgreSQL local, basta criar um banco chamado `workout_planner`.
-
-Exemplo usando Docker:
+O `compose.yaml` na raiz do projeto sobe um PostgreSQL 18 com volume persistente e healthcheck:
 
 ```bash
-docker run --name workout-planner-db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=workout_planner \
-  -p 5432:5432 \
-  -d postgres:16
+docker compose up -d db
+docker compose ps        # aguarde o status "healthy"
+```
+
+O banco fica acessível apenas em `localhost:5433` (porta escolhida para não conflitar com um PostgreSQL local na 5432), com usuário `postgres`, senha `postgres` e banco `workout_planner`. Esses valores podem ser alterados pelas variáveis `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` e `POSTGRES_PORT` (por exemplo, em um arquivo `.env` na raiz).
+
+Outros comandos úteis:
+
+```bash
+docker compose logs -f db                                    # logs do banco
+docker compose exec db psql -U postgres -d workout_planner   # console SQL
+docker compose down                                          # para o banco (mantém os dados)
+docker compose down -v                                       # para e APAGA os dados
 ```
 
 ### 4. Configure e rode o backend
