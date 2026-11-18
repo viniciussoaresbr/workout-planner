@@ -9,14 +9,20 @@ import {
 
 import { ConfirmService } from './confirm.service';
 
-/** Diálogo modal nativo (`<dialog>`): prende o foco, fecha com Esc e devolve a resposta. */
+/**
+ * Diálogo modal nativo (`<dialog>`): prende o foco, fecha com Esc e devolve a resposta.
+ *
+ * O overlay (`::backdrop`) é uma cor sólida translúcida, sem `backdrop-filter`: um blur cobrindo
+ * a viewport inteira obriga o compositor a refiltrar a página a cada frame (rolagem, hover,
+ * animações por trás), o que derrubava a taxa de quadros com o diálogo aberto.
+ */
 @Component({
   selector: 'app-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dialog
       #dialog
-      class="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-line bg-surface p-0 text-slate-100 shadow-2xl shadow-black/50 backdrop:bg-canvas/70 backdrop:backdrop-blur-xs"
+      class="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-line bg-surface p-0 text-slate-100 shadow-2xl shadow-black/50 backdrop:bg-canvas/80"
       aria-labelledby="confirm-title"
       aria-describedby="confirm-message"
       (cancel)="answer(false, $event)"
