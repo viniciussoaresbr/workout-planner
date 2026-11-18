@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AuthenticationError, ConflictError
+from app.core.rate_limit import login_failure_limiter
 from app.core.security import burn_password_check, hash_password, verify_password
 from app.models import Usuario
 from app.schemas.auth import LoginRequest, RegisterRequest
@@ -27,10 +28,16 @@ def register(db: Session, data: RegisterRequest) -> Usuario:
 
 
 def authenticate(db: Session, data: LoginRequest) -> Usuario:
+    # Bloqueia o e-mail após várias falhas, mesmo que venham de IPs diferentes.
+    # Vale também para e-mails inexistentes, para não revelar quais contas existem.
+    login_failure_limiter.check(data.email)
+
     usuario = get_by_email(db, data.email)
     if usuario is None:
         burn_password_check()
-        raise AuthenticationError("Credenciais inválidas.")
-    if not verify_password(data.senha, usuario.senha_hash):
-        raise AuthenticationError("Credenciais inválidas.")
-    return usuario
+    elif verify_password(data.senha, usuario.senha_hash):
+        login_failure_limiter.clear(data.email)
+        return usuario
+
+    login_failure_limiter.add(data.email)
+    raise AuthenticationError("Credenciais inválidas.")

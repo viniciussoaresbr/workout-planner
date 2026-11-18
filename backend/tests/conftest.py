@@ -16,12 +16,21 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.rate_limit import ALL_LIMITERS
 from app.db.base import Base
 from app.db.session import build_engine, get_db
 from app.main import app
 from app.models import Exercicio
 
 API = "/api/v1"
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits() -> Iterator[None]:
+    """Os limitadores guardam estado no processo; cada teste começa do zero."""
+    for limiter in ALL_LIMITERS:
+        limiter.reset()
+    yield
 
 
 @pytest.fixture

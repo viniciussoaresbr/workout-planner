@@ -22,11 +22,18 @@ class AppError(Exception):
     status_code: ClassVar[int] = status.HTTP_500_INTERNAL_SERVER_ERROR
     code: ClassVar[str] = "internal_server_error"
     default_message: ClassVar[str] = "Ocorreu um erro interno inesperado."
-    headers: ClassVar[dict[str, str] | None] = None
+    default_headers: ClassVar[dict[str, str] | None] = None
 
-    def __init__(self, message: str | None = None, *, details: Any = None) -> None:
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        details: Any = None,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.message = message or self.default_message
         self.details = details
+        self.headers = headers if headers is not None else self.default_headers
         super().__init__(self.message)
 
 
@@ -40,7 +47,7 @@ class AuthenticationError(AppError):
     status_code = status.HTTP_401_UNAUTHORIZED
     code = "unauthorized"
     default_message = "Não autenticado."
-    headers: ClassVar[dict[str, str] | None] = {"WWW-Authenticate": "Bearer"}
+    default_headers: ClassVar[dict[str, str] | None] = {"WWW-Authenticate": "Bearer"}
 
 
 class NotFoundError(AppError):
@@ -53,6 +60,17 @@ class ConflictError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "conflict"
     default_message = "O recurso entrou em conflito com outro registro."
+
+
+class TooManyRequestsError(AppError):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    code = "too_many_requests"
+    default_message = "Muitas tentativas. Aguarde um pouco e tente novamente."
+
+    def __init__(self, message: str | None = None, *, retry_after: int) -> None:
+        super().__init__(
+            message, details={"retry_after": retry_after}, headers={"Retry-After": str(retry_after)}
+        )
 
 
 class ServiceUnavailableError(AppError):

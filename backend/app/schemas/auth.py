@@ -14,7 +14,7 @@ class RegisterRequest(Schema):
     nome: str = Field(min_length=2, max_length=120, validation_alias=AliasChoices("nome", "name"))
     email: NormalizedEmail
     senha: str = Field(
-        min_length=6, max_length=128, validation_alias=AliasChoices("senha", "password")
+        min_length=8, max_length=128, validation_alias=AliasChoices("senha", "password")
     )
 
 

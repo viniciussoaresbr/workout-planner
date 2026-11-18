@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
+from threading import BoundedSemaphore
 from uuid import UUID
 
 import jwt
@@ -11,25 +12,30 @@ from app.core.config import settings
 from app.core.exceptions import AuthenticationError
 
 _password_hash = PasswordHash.recommended()
+# Argon2 (padrão do pwdlib) usa ~64 MiB por operação. Sem um teto, uma rajada de logins
+# ocupa todas as threads do servidor e esgota a memória.
+_hash_slots = BoundedSemaphore(settings.password_hash_concurrency)
 
 
 def hash_password(password: str) -> str:
-    return _password_hash.hash(password)
+    with _hash_slots:
+        return _password_hash.hash(password)
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    return _password_hash.verify(password, password_hash)
+    with _hash_slots:
+        return _password_hash.verify(password, password_hash)
 
 
 @lru_cache(maxsize=1)
 def _dummy_hash() -> str:
-    return _password_hash.hash("senha-ficticia-para-tempo-constante")
+    return hash_password("senha-ficticia-para-tempo-constante")
 
 
 def burn_password_check() -> None:
     """Executa uma verificação descartável para que o login de um e-mail inexistente
     leve o mesmo tempo de um e-mail existente (evita enumeração de usuários por timing)."""
-    _password_hash.verify("senha-invalida", _dummy_hash())
+    verify_password("senha-invalida", _dummy_hash())
 
 
 def create_access_token(user_id: UUID) -> str:

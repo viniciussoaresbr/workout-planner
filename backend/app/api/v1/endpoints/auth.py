@@ -1,6 +1,9 @@
-from fastapi import APIRouter, status
+from collections.abc import Callable
+
+from fastapi import APIRouter, Depends, Request, status
 
 from app.api.deps import CurrentUser, DbSession
+from app.core.rate_limit import RateLimiter, login_ip_limiter, register_ip_limiter
 from app.core.security import create_access_token
 from app.schemas.auth import CurrentUserResponse, LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.common import ApiResponse
@@ -9,7 +12,21 @@ from app.services import auth_service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+def _limit_by_ip(limiter: RateLimiter) -> Callable[[Request], None]:
+    """Conta a requisição pelo IP do cliente. Atrás de um proxy reverso, rode o uvicorn com
+    `--proxy-headers --forwarded-allow-ips=<ip do proxy>` para que este seja o IP real."""
+
+    def dependency(request: Request) -> None:
+        limiter.hit(request.client.host if request.client else "desconhecido")
+
+    return dependency
+
+
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(_limit_by_ip(register_ip_limiter))],
+)
 def register(payload: RegisterRequest, db: DbSession) -> ApiResponse[TokenResponse]:
     usuario = auth_service.register(db, payload)
     return ApiResponse(
@@ -18,7 +35,7 @@ def register(payload: RegisterRequest, db: DbSession) -> ApiResponse[TokenRespon
     )
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(_limit_by_ip(login_ip_limiter))])
 def login(payload: LoginRequest, db: DbSession) -> ApiResponse[TokenResponse]:
     usuario = auth_service.authenticate(db, payload)
     return ApiResponse(

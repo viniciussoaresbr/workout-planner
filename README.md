@@ -104,9 +104,16 @@ cp .env.example .env
 | Variável | Descrição |
 | --- | --- |
 | `DATABASE_URL` | URL do PostgreSQL (`postgresql://...` usa o driver psycopg 3 automaticamente) |
-| `JWT_SECRET_KEY` | Segredo do JWT, com no mínimo 32 caracteres |
+| `ENVIRONMENT` | `development`, `test` ou `production`. Em `production`, `/docs`, `/redoc` e `/openapi.json` ficam desativados |
+| `JWT_SECRET_KEY` | Segredo do JWT, com no mínimo 32 caracteres e aleatório. Gere com `python -c "import secrets; print(secrets.token_urlsafe(48))"`; a API não inicia com o valor de exemplo |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Validade do token (padrão: 60) |
 | `CORS_ORIGINS` | Lista JSON de origens permitidas (padrão: `["http://localhost:4200"]`) |
+| `LOGIN_RATE_LIMIT_PER_MINUTE` | Tentativas de login por IP por minuto (padrão: 20) |
+| `LOGIN_FAILURE_LIMIT` | Falhas de login por e-mail a cada 15 minutos antes do bloqueio temporário (padrão: 10) |
+| `REGISTER_RATE_LIMIT_PER_HOUR` | Cadastros por IP por hora (padrão: 10) |
+| `PASSWORD_HASH_CONCURRENCY` | Hashes de senha (Argon2, ~64 MiB cada) executados ao mesmo tempo (padrão: 4) |
+
+Os limites de tentativas ficam em memória e valem por processo: com vários workers ou réplicas, cada um conta separadamente. Atrás de um proxy reverso, inicie o uvicorn com `--proxy-headers --forwarded-allow-ips=<ip do proxy>` para que os limites usem o IP real do cliente, e não o do proxy.
 
 Aplique as migrações e popule o catálogo de exercícios (o seed é idempotente e pode ser executado novamente sempre que o catálogo mudar):
 
@@ -124,7 +131,7 @@ uvicorn app.main:app --reload
 Com a API em execução:
 
 - Backend: `http://localhost:8000`
-- Swagger UI: `http://localhost:8000/docs`
+- Swagger UI: `http://localhost:8000/docs` (desativado com `ENVIRONMENT=production`)
 - Health checks: `GET /health` (processo no ar) e `GET /health/ready` (verifica o banco)
 
 ### 5. Configure e rode o frontend

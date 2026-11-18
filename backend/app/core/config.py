@@ -7,6 +7,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
+# Valores de exemplo já publicados no repositório (atual e versões anteriores do .env.example).
+_PLACEHOLDER_SECRETS = frozenset(
+    {
+        "troque-por-um-valor-aleatorio-com-pelo-menos-32-caracteres",
+        "troque-esta-chave-por-um-valor-seguro",
+    }
+)
+
 
 class Settings(BaseSettings):
     """Configuração da aplicação carregada de variáveis de ambiente e do arquivo .env."""
@@ -31,6 +39,32 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=60, gt=0)
 
     cors_origins: list[str] = ["http://localhost:4200"]
+
+    # Limites contra força bruta e abuso do hash de senha (contados por processo).
+    login_rate_limit_per_minute: int = Field(default=20, gt=0)
+    login_failure_limit: int = Field(default=10, gt=0)  # falhas por e-mail a cada 15 min
+    register_rate_limit_per_hour: int = Field(default=10, gt=0)
+    # Cada hash Argon2 usa ~64 MiB; limita quantos rodam ao mesmo tempo.
+    password_hash_concurrency: int = Field(default=4, gt=0)
+
+    @property
+    def docs_enabled(self) -> bool:
+        """Swagger/ReDoc/OpenAPI ficam desativados em produção."""
+        return self.environment != "production"
+
+    @field_validator("jwt_secret_key")
+    @classmethod
+    def reject_placeholder_secret(cls, value: SecretStr) -> SecretStr:
+        """Impede subir a API com o valor de exemplo (público) como chave de assinatura."""
+        secret = value.get_secret_value()
+        if secret in _PLACEHOLDER_SECRETS or secret.lower().startswith("troque"):
+            raise ValueError(
+                "JWT_SECRET_KEY ainda é o valor de exemplo. Gere um novo com: "
+                'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+            )
+        if len(set(secret)) < 10:
+            raise ValueError("JWT_SECRET_KEY tem pouca variação de caracteres; gere um aleatório.")
+        return value
 
     @field_validator("database_url")
     @classmethod

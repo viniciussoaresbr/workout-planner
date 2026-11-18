@@ -31,11 +31,20 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     configure_logging()
 
-    app = FastAPI(title=settings.app_name, version=settings.app_version, lifespan=lifespan)
+    docs_enabled = settings.docs_enabled
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.app_version,
+        lifespan=lifespan,
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_credentials=True,
+        # A autenticação usa o cabeçalho Authorization (Bearer), não cookies.
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["Content-Disposition", REQUEST_ID_HEADER],
