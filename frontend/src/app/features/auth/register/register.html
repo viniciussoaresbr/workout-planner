@@ -2,7 +2,7 @@
   <h2 class="text-2xl font-semibold tracking-tight text-white">Criar conta</h2>
   <p class="mt-2 text-sm text-slate-400">Leva menos de um minuto. Suas rotinas ficam salvas.</p>
 
-  <form class="mt-8 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form class="mt-8 space-y-2" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div>
       <label class="field-label" for="register-name">Nome</label>
       <input
@@ -35,20 +35,52 @@
 
     <div>
       <label class="field-label" for="register-password">Senha</label>
-      <input
-        id="register-password"
-        type="password"
-        autocomplete="new-password"
-        formControlName="password"
-        class="field"
-        [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
-        aria-describedby="register-password-error"
-        placeholder="Mínimo de {{ limits.passwordMin }} caracteres"
+      <div class="relative">
+        <input
+          #passwordInput
+          id="register-password"
+          type="password"
+          autocomplete="new-password"
+          formControlName="password"
+          class="field pr-11"
+          [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+          aria-describedby="register-password-error"
+          placeholder="Crie uma senha"
+        />
+        <app-password-toggle [input]="passwordInput" />
+      </div>
+      <app-field-error
+        [control]="form.controls.password"
+        [hint]="passwordHint"
+        id="register-password-error"
       />
-      <app-field-error [control]="form.controls.password" id="register-password-error" />
     </div>
 
-    <button type="submit" class="btn btn-primary w-full py-3" [disabled]="submitting()">
+    <div>
+      <label class="field-label" for="register-confirm-password">Confirmar senha</label>
+      <div class="relative">
+        <input
+          #confirmPasswordInput
+          id="register-confirm-password"
+          type="password"
+          autocomplete="new-password"
+          formControlName="confirmPassword"
+          class="field pr-11"
+          [attr.aria-invalid]="
+            form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid
+          "
+          aria-describedby="register-confirm-password-error"
+          placeholder="Repita a senha"
+        />
+        <app-password-toggle [input]="confirmPasswordInput" label="confirmação de senha" />
+      </div>
+      <app-field-error
+        [control]="form.controls.confirmPassword"
+        id="register-confirm-password-error"
+      />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3 w-full py-3" [disabled]="submitting()">
       {{ submitting() ? 'Criando conta...' : 'Criar conta' }}
     </button>
   </form>

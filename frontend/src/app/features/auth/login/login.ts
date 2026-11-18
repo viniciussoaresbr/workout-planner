@@ -7,11 +7,14 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { getErrorMessage } from '../../../core/http/http-error';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { FieldError } from '../../../shared/forms/field-error';
+import { PasswordToggle } from '../../../shared/forms/password-toggle';
+import { AppValidators } from '../../../shared/forms/validators';
 import { AuthLayout } from '../auth-layout';
+import { AUTH_LIMITS } from '../auth-limits';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, FieldError, AuthLayout],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, PasswordToggle, AuthLayout],
   templateUrl: './login.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -22,8 +25,15 @@ export class Login {
 
   protected readonly submitting = signal(false);
   protected readonly form = inject(NonNullableFormBuilder).group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
+    email: [
+      '',
+      [
+        AppValidators.requiredTrimmed,
+        AppValidators.email,
+        Validators.maxLength(AUTH_LIMITS.emailMax),
+      ],
+    ],
+    password: ['', [Validators.required, Validators.maxLength(AUTH_LIMITS.passwordMax)]],
   });
 
   protected submit(): void {
@@ -36,8 +46,9 @@ export class Login {
     }
 
     this.submitting.set(true);
+    const { email, password } = this.form.getRawValue();
     this.auth
-      .login(this.form.getRawValue())
+      .login({ email: email.trim(), password })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => {

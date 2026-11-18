@@ -52,6 +52,48 @@ describe('Login', () => {
     expect(errors).toEqual(['Campo obrigatório.', 'Campo obrigatório.']);
   });
 
+  it('reserva o espaço do erro abaixo de cada campo mesmo sem erro', async () => {
+    const page = await render();
+
+    const slots = page.element.querySelectorAll('app-field-error');
+    expect(slots).toHaveLength(2);
+    for (const slot of slots) {
+      expect(slot.classList).toContain('min-h-6');
+      expect(slot.querySelector('[role=alert]')).toBeNull();
+    }
+  });
+
+  it('rejeita e-mail sem domínio completo', async () => {
+    const page = await render();
+
+    page.type('#login-email', 'ana@exemplo');
+    page.type('#login-password', 'segredo');
+    await page.submit();
+
+    expect(auth.login).not.toHaveBeenCalled();
+    expect(page.element.querySelector('#login-email-error')?.textContent?.trim()).toBe(
+      'Informe um e-mail válido.',
+    );
+  });
+
+  it('alterna a visibilidade da senha', async () => {
+    const page = await render();
+    const input = page.element.querySelector<HTMLInputElement>('#login-password')!;
+    const toggle = page.element.querySelector<HTMLButtonElement>('app-password-toggle button')!;
+
+    expect(input.type).toBe('password');
+    expect(toggle.getAttribute('aria-label')).toBe('Mostrar senha');
+    expect(toggle.getAttribute('aria-controls')).toBe('login-password');
+
+    toggle.click();
+    await page.fixture.whenStable();
+    expect(input.type).toBe('text');
+
+    toggle.click();
+    await page.fixture.whenStable();
+    expect(input.type).toBe('password');
+  });
+
   it('faz login e navega para o treino', async () => {
     const page = await render();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
