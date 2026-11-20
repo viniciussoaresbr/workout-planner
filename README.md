@@ -1,6 +1,6 @@
 # Workout Planner
 
-Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilhas Excel. O projeto é dividido em backend com FastAPI, frontend com Angular e um seed para popular a base inicial de exercícios.
+Aplicação web para montar rotinas de treino personalizadas e exportá-las em planilha Excel ou PDF. O projeto é dividido em backend com FastAPI, frontend com Angular e um seed para popular a base inicial de exercícios.
 
 ![Home](./frontend/src/app/assets/screenshots/rotina.png)
 <div align="center">
@@ -14,7 +14,7 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 - Cadastro e autenticação de usuários com JWT
 - Listagem e filtro de exercícios por nome e grupo muscular
 - Criação, edição, consulta e remoção de rotinas de treino
-- Exportação de rotinas para arquivo `.xlsx`
+- Exportação de rotinas para planilha `.xlsx` ou documento `.pdf`
 - Seed idempotente do catálogo de exercícios (`python -m app.seed`)
 
 ## Tecnologias Utilizadas
@@ -26,7 +26,7 @@ Aplicação web para montar rotinas de treino personalizadas e exportá-las em p
 - SQLAlchemy 2 + Alembic
 - PostgreSQL (driver `psycopg` 3)
 - `PyJWT` para tokens JWT e `pwdlib` (Argon2) para hash de senhas
-- `XlsxWriter` para geração de planilhas
+- `XlsxWriter` para geração de planilhas e `ReportLab` para geração de PDF
 
 ### Frontend
 

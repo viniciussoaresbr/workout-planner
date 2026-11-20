@@ -8,3 +8,4 @@ psycopg[binary]==3.3.9
 pyjwt==2.15.1
 pwdlib[argon2]==0.4.2
 xlsxwriter==3.3.1
+reportlab==5.1.0
