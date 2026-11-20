@@ -171,7 +171,7 @@ Com backend e frontend rodando, o fluxo local fica assim:
 2. Crie uma conta ou faça login
 3. Pesquise exercícios e filtre por grupo muscular
 4. Monte sua rotina de treino
-5. Exporte a rotina para planilha Excel
+5. Exporte a rotina para planilha Excel ou PDF
 
 ## Comandos Úteis
 

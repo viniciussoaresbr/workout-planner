@@ -44,7 +44,7 @@ import { Brand } from '../../shared/ui/brand';
         </div>
 
         <p class="relative text-sm text-slate-500">
-          Exportação para Excel (.xlsx) · suas rotinas ficam salvas na sua conta
+          Exportação para Excel (.xlsx) e PDF · suas rotinas ficam salvas na sua conta
         </p>
       </aside>
 
@@ -61,6 +61,6 @@ export class AuthLayout {
   protected readonly passos = [
     'Filtre exercícios por grupo muscular',
     'Arraste para os dias da semana',
-    'Exporte a rotina em planilha',
+    'Exporte a rotina em planilha ou PDF',
   ];
 }

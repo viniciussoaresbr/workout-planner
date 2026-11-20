@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -29,6 +29,7 @@ function dropEvent(from: string, to: string, data: unknown, previousIndex = 0, c
 describe('RotinaBuilder', () => {
   let store: RotinaEditorStore;
   let builder: BuilderHarness;
+  let fixture: ComponentFixture<RotinaBuilder>;
   let toast: { success: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
@@ -45,7 +46,7 @@ describe('RotinaBuilder', () => {
         },
       ],
     });
-    const fixture = TestBed.createComponent(RotinaBuilder);
+    fixture = TestBed.createComponent(RotinaBuilder);
     await fixture.whenStable();
     store = fixture.debugElement.injector.get(RotinaEditorStore);
     builder = fixture.componentInstance as unknown as BuilderHarness;
@@ -94,5 +95,27 @@ describe('RotinaBuilder', () => {
       );
       expect(nomes).toEqual([SUPINO.nome]);
     });
+  });
+
+  it('oferece a exportação em planilha e em PDF no menu Exportar', async () => {
+    const exportar = vi.spyOn(store, 'exportar').mockImplementation(() => undefined);
+    const trigger = [...fixture.nativeElement.querySelectorAll('header button')].find(
+      (button: HTMLButtonElement) => button.textContent?.includes('Exportar'),
+    ) as HTMLButtonElement;
+
+    trigger.click();
+    await fixture.whenStable();
+
+    const itens = [...document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')];
+    expect(itens.map(item => item.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Planilha .xlsx',
+      'PDF .pdf',
+    ]);
+
+    itens[1].click();
+    await fixture.whenStable();
+
+    expect(exportar).toHaveBeenCalledWith('pdf');
+    expect(document.querySelector('[role="menuitem"]')).toBeNull();
   });
 });

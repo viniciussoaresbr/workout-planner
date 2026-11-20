@@ -143,6 +143,20 @@
     @apply bg-white/5 text-white;
   }
 
+  /* ---- Menus (CDK Menu, renderizados no overlay do <body>) ---- */
+  .menu-panel {
+    @apply flex min-w-44 flex-col rounded-lg border border-line bg-surface-raised p-1 shadow-xl shadow-black/40;
+  }
+
+  .menu-item {
+    @apply flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-slate-100 outline-hidden transition duration-150;
+  }
+
+  .menu-item:hover,
+  .menu-item:focus-visible {
+    @apply bg-white/5 text-white;
+  }
+
   /* ---- Campos ---- */
   .field-label {
     @apply mb-1.5 block text-sm font-medium text-slate-300;

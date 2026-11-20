@@ -27,7 +27,9 @@ describe('RotinaEditorStore', () => {
       criar: vi.fn(() => of(fromRotinaDto(rotinaDto({ id: 'nova', nome: 'Nova' })))),
       atualizar: vi.fn(() => of(fromRotinaDto(rotinaDto({ nome: 'Treino A2' })))),
       excluir: vi.fn(() => of(undefined)),
-      exportarPlanilha: vi.fn(() => of({ blob: new Blob(['x']), filename: 'rotina-a.xlsx' })),
+      exportar: vi.fn((_id: string, formato: string) =>
+        of({ blob: new Blob(['x']), filename: `rotina-a.${formato}` }),
+      ),
     };
     toast = { success: vi.fn(), warning: vi.fn() };
     confirm = { ask: vi.fn(async () => true) };
@@ -238,23 +240,48 @@ describe('RotinaEditorStore', () => {
     });
 
     it('exporta apenas rotinas salvas e sem alterações pendentes', async () => {
-      store.exportSpreadsheet();
-      expect(toast.warning).toHaveBeenLastCalledWith(
-        'Salve a rotina antes de exportar a planilha.',
-      );
+      store.exportar('xlsx');
+      expect(toast.warning).toHaveBeenLastCalledWith('Salve a rotina antes de exportar.');
 
       await store.select('rotina-1');
       store.nome.set('Mudou');
-      store.exportSpreadsheet();
-      expect(toast.warning).toHaveBeenLastCalledWith(
-        'Salve as alterações antes de exportar a planilha.',
-      );
-      expect(api.exportarPlanilha).not.toHaveBeenCalled();
+      store.exportar('pdf');
+      expect(toast.warning).toHaveBeenLastCalledWith('Salve as alterações antes de exportar.');
+      expect(api.exportar).not.toHaveBeenCalled();
 
       store.nome.set('Treino A');
-      store.exportSpreadsheet();
-      expect(api.exportarPlanilha).toHaveBeenCalledWith('rotina-1');
+      store.exportar('xlsx');
+      expect(api.exportar).toHaveBeenCalledWith('rotina-1', 'xlsx');
       expect(downloader.download).toHaveBeenCalledWith(expect.any(Blob), 'rotina-a.xlsx');
+      expect(toast.success).toHaveBeenLastCalledWith('Planilha exportada com sucesso.');
+    });
+
+    it('exporta em PDF e usa um nome padrão se a API não informar um', async () => {
+      await store.select('rotina-1');
+      api.exportar.mockReturnValueOnce(of({ blob: new Blob(['%PDF']), filename: null }));
+
+      store.exportar('pdf');
+
+      expect(api.exportar).toHaveBeenCalledWith('rotina-1', 'pdf');
+      expect(downloader.download).toHaveBeenCalledWith(expect.any(Blob), 'rotina.pdf');
+      expect(toast.success).toHaveBeenLastCalledWith('PDF exportado com sucesso.');
+      expect(store.exporting()).toBeNull();
+    });
+
+    it('ignora uma nova exportação enquanto outra está em andamento', async () => {
+      await store.select('rotina-1');
+      const pendente = new Subject<{ blob: Blob; filename: string }>();
+      api.exportar.mockReturnValueOnce(pendente);
+
+      store.exportar('pdf');
+      expect(store.exporting()).toBe('pdf');
+      store.exportar('xlsx');
+      expect(api.exportar).toHaveBeenCalledTimes(1);
+
+      pendente.next({ blob: new Blob(['%PDF']), filename: 'rotina-a.pdf' });
+      pendente.complete();
+      expect(store.exporting()).toBeNull();
+      expect(downloader.download).toHaveBeenCalledWith(expect.any(Blob), 'rotina-a.pdf');
     });
 
     it('reset volta ao estado inicial após confirmar o descarte', async () => {

@@ -15,7 +15,13 @@ import {
   RotinaDraft,
   RotinaResumo,
 } from '../data/rotina.models';
-import { RotinasApi } from '../data/rotinas.api';
+import { FormatoExportacao, RotinasApi } from '../data/rotinas.api';
+
+/** Nome usado se a API não informar um, e mensagem exibida ao concluir cada exportação. */
+const EXPORTACOES: Record<FormatoExportacao, { fallbackFilename: string; sucesso: string }> = {
+  xlsx: { fallbackFilename: 'rotina.xlsx', sucesso: 'Planilha exportada com sucesso.' },
+  pdf: { fallbackFilename: 'rotina.pdf', sucesso: 'PDF exportado com sucesso.' },
+};
 
 export type ItemPatch = Partial<Pick<ItemTreino, 'series' | 'repeticoes'>>;
 
@@ -76,7 +82,8 @@ export class RotinaEditorStore {
   readonly loadingId = signal<string | null>(null);
   readonly saving = signal(false);
   readonly deleting = signal(false);
-  readonly exporting = signal(false);
+  /** Formato sendo exportado no momento, ou `null` se nenhuma exportação está em andamento. */
+  readonly exporting = signal<FormatoExportacao | null>(null);
   private readonly savedSignature = signal(EMPTY_SIGNATURE);
 
   // ---- Derivados ----
@@ -273,27 +280,28 @@ export class RotinaEditorStore {
     );
   }
 
-  exportSpreadsheet(): void {
+  exportar(formato: FormatoExportacao): void {
     const id = this.selectedId();
     if (!id) {
-      this.toast.warning('Salve a rotina antes de exportar a planilha.');
+      this.toast.warning('Salve a rotina antes de exportar.');
       return;
     }
     if (this.hasUnsavedChanges()) {
-      this.toast.warning('Salve as alterações antes de exportar a planilha.');
+      this.toast.warning('Salve as alterações antes de exportar.');
       return;
     }
     if (this.exporting()) {
       return;
     }
 
-    this.exporting.set(true);
+    const { fallbackFilename, sucesso } = EXPORTACOES[formato];
+    this.exporting.set(formato);
     this.run(
-      this.api.exportarPlanilha(id),
-      () => this.exporting.set(false),
+      this.api.exportar(id, formato),
+      () => this.exporting.set(null),
       ({ blob, filename }) => {
-        this.downloader.download(blob, filename ?? 'rotina.xlsx');
-        this.toast.success('Planilha exportada com sucesso.');
+        this.downloader.download(blob, filename ?? fallbackFilename);
+        this.toast.success(sucesso);
       },
     );
   }

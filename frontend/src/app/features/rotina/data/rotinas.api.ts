@@ -12,10 +12,18 @@ export interface ExerciciosQuery {
   musculo?: string;
 }
 
-export interface ArquivoPlanilha {
+export type FormatoExportacao = 'xlsx' | 'pdf';
+
+export interface ArquivoExportado {
   blob: Blob;
   filename: string | null;
 }
+
+/** Cada formato tem seu endpoint; todos recebem `{ rotina_id }` e devolvem o arquivo. */
+const EXPORT_PATHS: Record<FormatoExportacao, string> = {
+  xlsx: 'planilha/export',
+  pdf: 'pdf/export',
+};
 
 /** O catálogo é pequeno: uma página grande evita esconder exercícios da biblioteca. */
 const EXERCICIOS_PAGE_SIZE = 100;
@@ -79,10 +87,10 @@ export class RotinasApi {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
 
-  exportarPlanilha(rotinaId: string): Observable<ArquivoPlanilha> {
+  exportar(rotinaId: string, formato: FormatoExportacao): Observable<ArquivoExportado> {
     return this.http
       .post(
-        `${this.apiUrl}/planilha/export`,
+        `${this.apiUrl}/${EXPORT_PATHS[formato]}`,
         { rotina_id: rotinaId },
         { observe: 'response', responseType: 'blob' },
       )

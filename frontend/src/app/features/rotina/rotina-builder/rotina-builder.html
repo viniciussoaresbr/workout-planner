@@ -10,15 +10,42 @@
       <button
         type="button"
         class="btn btn-secondary px-3 sm:px-4"
+        [cdkMenuTriggerFor]="exportMenu"
+        [cdkMenuPosition]="exportMenuPosition"
         [disabled]="store.exporting() || store.loadingId()"
-        (click)="store.exportSpreadsheet()"
       >
         <ng-icon name="heroArrowDownTray" class="text-base" />
         <span class="hidden sm:inline">
-          {{ store.exporting() ? 'Exportando...' : 'Exportar planilha' }}
+          {{ store.exporting() ? 'Exportando...' : 'Exportar' }}
         </span>
-        <span class="sr-only sm:hidden">Exportar planilha</span>
+        <span class="sr-only sm:hidden">Exportar</span>
+        <ng-icon name="heroChevronDown" class="-mr-1 hidden text-sm text-slate-400 sm:inline" />
       </button>
+
+      <ng-template #exportMenu>
+        <div cdkMenu class="menu-panel" aria-label="Formato de exportação">
+          <button
+            type="button"
+            cdkMenuItem
+            class="menu-item"
+            (cdkMenuItemTriggered)="store.exportar('xlsx')"
+          >
+            <ng-icon name="heroTableCells" class="text-base text-slate-400" />
+            Planilha
+            <span class="ml-auto text-xs text-slate-500">.xlsx</span>
+          </button>
+          <button
+            type="button"
+            cdkMenuItem
+            class="menu-item"
+            (cdkMenuItemTriggered)="store.exportar('pdf')"
+          >
+            <ng-icon name="heroDocumentText" class="text-base text-slate-400" />
+            PDF
+            <span class="ml-auto text-xs text-slate-500">.pdf</span>
+          </button>
+        </div>
+      </ng-template>
       <button
         type="button"
         class="btn btn-primary"
