@@ -1,5 +1,7 @@
 """Proteções de segurança: chave JWT, limites de tentativas, docs em produção e CORS."""
 
+from collections.abc import Iterator
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -9,6 +11,7 @@ from app.core.config import Settings
 from app.core.exceptions import TooManyRequestsError
 from app.core.rate_limit import (
     RateLimiter,
+    login_account_limiter,
     login_failure_limiter,
     login_ip_limiter,
     register_ip_limiter,
@@ -98,6 +101,13 @@ def _login(client: TestClient, email: str, password: str) -> int:
     return response.status_code
 
 
+@pytest.fixture
+def outro_ip(client: TestClient) -> Iterator[TestClient]:
+    """Cliente vindo de outro IP, usando o mesmo banco de teste do fixture `client`."""
+    with TestClient(main.app, client=("203.0.113.7", 50000)) as other:
+        yield other
+
+
 def test_login_limitado_por_ip(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(login_ip_limiter, "limit", 2)
 
@@ -110,7 +120,7 @@ def test_login_limitado_por_ip(client: TestClient, monkeypatch: pytest.MonkeyPat
     assert int(response.headers["retry-after"]) > 0
 
 
-def test_login_bloqueia_email_apos_falhas_mesmo_com_senha_correta(
+def test_login_bloqueia_o_ip_que_errou_mesmo_com_senha_correta(
     client: TestClient, register: RegisterFn, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(login_failure_limiter, "limit", 2)
@@ -120,6 +130,41 @@ def test_login_bloqueia_email_apos_falhas_mesmo_com_senha_correta(
     assert _login(client, "ANA@example.com", "errada") == 401
     assert _login(client, "ana@example.com", "senha-segura") == 429
     # Outras contas não são afetadas.
+    assert _login(client, "bia@example.com", "qualquer") == 401
+
+
+def test_atacante_nao_tranca_a_conta_do_dono(
+    client: TestClient,
+    outro_ip: TestClient,
+    register: RegisterFn,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Falhas de um IP não impedem o dono da conta de entrar a partir de outro IP."""
+    monkeypatch.setattr(login_failure_limiter, "limit", 2)
+    register(email="ana@example.com", password="senha-segura")
+
+    assert _login(client, "ana@example.com", "errada") == 401
+    assert _login(client, "ana@example.com", "errada") == 401
+    assert _login(client, "ana@example.com", "errada") == 429
+
+    assert _login(outro_ip, "ana@example.com", "senha-segura") == 200
+
+
+def test_login_bloqueia_conta_sob_forca_bruta_distribuida(
+    client: TestClient,
+    outro_ip: TestClient,
+    register: RegisterFn,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(login_failure_limiter, "limit", 10)
+    monkeypatch.setattr(login_account_limiter, "limit", 3)
+    register(email="ana@example.com", password="senha-segura")
+
+    assert _login(client, "ana@example.com", "errada") == 401
+    assert _login(outro_ip, "ana@example.com", "errada") == 401
+    assert _login(client, "ana@example.com", "errada") == 401
+    # Somando os IPs, a conta atingiu o limite: nenhum IP entra até a janela expirar.
+    assert _login(outro_ip, "ana@example.com", "senha-segura") == 429
     assert _login(client, "bia@example.com", "qualquer") == 401
 
 

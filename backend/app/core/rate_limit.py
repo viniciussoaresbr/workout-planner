@@ -10,6 +10,8 @@ import time
 from collections.abc import Callable
 from threading import Lock
 
+from starlette.requests import Request
+
 from app.core.config import settings
 from app.core.exceptions import TooManyRequestsError
 
@@ -88,11 +90,25 @@ class RateLimiter:
             del self._windows[next(iter(self._windows))]
 
 
+def client_ip(request: Request) -> str:
+    """IP do cliente. Atrás de um proxy reverso, rode o uvicorn com
+    `--proxy-headers --forwarded-allow-ips=<ip do proxy>` para que este seja o IP real."""
+    return request.client.host if request.client else "desconhecido"
+
+
+def login_failure_key(email: str, ip: str) -> str:
+    return f"{email}|{ip}"
+
+
 # Tentativas de login por IP (protege contra força bruta e contra abuso do hash Argon2).
 login_ip_limiter = RateLimiter(settings.login_rate_limit_per_minute, window_seconds=60)
-# Falhas de login por e-mail (protege uma conta específica contra força bruta distribuída).
+# Falhas de login por e-mail + IP: barra a força bruta de um IP contra uma conta sem bloquear
+# o dono da conta, que entra de outro IP.
 login_failure_limiter = RateLimiter(settings.login_failure_limit, window_seconds=15 * 60)
+# Falhas de login por e-mail somando todos os IPs (força bruta distribuída). O limite é alto
+# para que trancar a conta exija vários IPs.
+login_account_limiter = RateLimiter(settings.login_account_failure_limit, window_seconds=60 * 60)
 # Cadastros por IP (limita a criação em massa de contas e a enumeração de e-mails).
 register_ip_limiter = RateLimiter(settings.register_rate_limit_per_hour, window_seconds=60 * 60)
 
-ALL_LIMITERS = (login_ip_limiter, login_failure_limiter, register_ip_limiter)
+ALL_LIMITERS = (login_ip_limiter, login_failure_limiter, login_account_limiter, register_ip_limiter)

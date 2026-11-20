@@ -42,7 +42,13 @@ class Settings(BaseSettings):
 
     # Limites contra força bruta e abuso do hash de senha (contados por processo).
     login_rate_limit_per_minute: int = Field(default=20, gt=0)
-    login_failure_limit: int = Field(default=10, gt=0)  # falhas por e-mail a cada 15 min
+    # Falhas por e-mail vindas de um mesmo IP a cada 15 min. Bloqueia só aquele IP, para que
+    # um atacante não consiga trancar a conta do dono.
+    login_failure_limit: int = Field(default=10, gt=0)
+    # Falhas por e-mail somando todos os IPs a cada hora (força bruta distribuída). Um único
+    # IP fica limitado a ~4x `login_failure_limit` por hora, então bloquear uma conta exige
+    # vários IPs atacando ao mesmo tempo.
+    login_account_failure_limit: int = Field(default=100, gt=0)
     register_rate_limit_per_hour: int = Field(default=10, gt=0)
     # Cada hash Argon2 usa ~64 MiB; limita quantos rodam ao mesmo tempo.
     password_hash_concurrency: int = Field(default=4, gt=0)

@@ -109,7 +109,8 @@ cp .env.example .env
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Validade do token (padrão: 60) |
 | `CORS_ORIGINS` | Lista JSON de origens permitidas (padrão: `["http://localhost:4200"]`) |
 | `LOGIN_RATE_LIMIT_PER_MINUTE` | Tentativas de login por IP por minuto (padrão: 20) |
-| `LOGIN_FAILURE_LIMIT` | Falhas de login por e-mail a cada 15 minutos antes do bloqueio temporário (padrão: 10) |
+| `LOGIN_FAILURE_LIMIT` | Falhas de login por e-mail vindas de um mesmo IP a cada 15 minutos antes do bloqueio temporário daquele IP (padrão: 10). O dono da conta continua entrando de outro IP |
+| `LOGIN_ACCOUNT_FAILURE_LIMIT` | Falhas de login por e-mail somando todos os IPs a cada hora antes do bloqueio temporário da conta, contra força bruta distribuída (padrão: 100) |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | Cadastros por IP por hora (padrão: 10) |
 | `PASSWORD_HASH_CONCURRENCY` | Hashes de senha (Argon2, ~64 MiB cada) executados ao mesmo tempo (padrão: 4) |
 
