@@ -100,5 +100,5 @@ class RotinaRead(Schema):
     dias: list[DiaRotinaRead]
 
 
-class PlanilhaExportRequest(Schema):
+class RotinaExportRequest(Schema):
     rotina_id: UUID

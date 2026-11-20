@@ -95,3 +95,29 @@ def register(client: TestClient) -> RegisterFn:
 @pytest.fixture
 def auth_headers(register: RegisterFn) -> dict[str, str]:
     return register()
+
+
+def criar_rotina(
+    client: TestClient, headers: dict[str, str], exercicio: Exercicio, nome: str
+) -> str:
+    """Cria uma rotina com um exercício na segunda-feira e devolve o id."""
+    payload = {
+        "nome": nome,
+        "dias": [
+            {
+                "nome": "Segunda",
+                "ordem": 1,
+                "itens": [
+                    {
+                        "exercicio_id": str(exercicio.id),
+                        "series": "4",
+                        "repeticoes": "8-12",
+                        "ordem": 1,
+                    }
+                ],
+            }
+        ],
+    }
+    response = client.post(f"{API}/rotinas", json=payload, headers=headers)
+    assert response.status_code == 201, response.text
+    return response.json()["data"]["id"]

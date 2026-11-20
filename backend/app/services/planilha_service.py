@@ -1,12 +1,11 @@
 """Geração da planilha Excel de uma rotina (xlsxwriter, sem dependência de pandas)."""
 
-import re
-import unicodedata
 from io import BytesIO
 
 import xlsxwriter
 
 from app.models import Rotina
+from app.services import exportacao
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -47,7 +46,4 @@ def build_workbook(rotina: Rotina) -> bytes:
 
 
 def build_filename(rotina: Rotina) -> str:
-    """Nome de arquivo seguro para o cabeçalho Content-Disposition (somente ASCII)."""
-    ascii_name = unicodedata.normalize("NFKD", rotina.nome).encode("ascii", "ignore").decode()
-    slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-") or "treino"
-    return f"rotina-{slug[:80]}.xlsx"
+    return exportacao.build_filename(rotina, "xlsx")

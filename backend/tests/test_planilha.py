@@ -6,32 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.models import Exercicio
 from app.services.planilha_service import XLSX_MEDIA_TYPE, build_filename
-from tests.conftest import API, RegisterFn
-
-
-def _criar_rotina(
-    client: TestClient, headers: dict[str, str], exercicio: Exercicio, nome: str
-) -> str:
-    payload = {
-        "nome": nome,
-        "dias": [
-            {
-                "nome": "Segunda",
-                "ordem": 1,
-                "itens": [
-                    {
-                        "exercicio_id": str(exercicio.id),
-                        "series": "4",
-                        "repeticoes": "8-12",
-                        "ordem": 1,
-                    }
-                ],
-            }
-        ],
-    }
-    response = client.post(f"{API}/rotinas", json=payload, headers=headers)
-    assert response.status_code == 201, response.text
-    return response.json()["data"]["id"]
+from tests.conftest import API, RegisterFn, criar_rotina
 
 
 def _textos_da_planilha(content: bytes) -> str:
@@ -42,7 +17,7 @@ def _textos_da_planilha(content: bytes) -> str:
 def test_exporta_planilha_da_rotina(
     client: TestClient, auth_headers: dict[str, str], exercicios: list[Exercicio]
 ) -> None:
-    rotina_id = _criar_rotina(client, auth_headers, exercicios[0], "Treino Pé & Força")
+    rotina_id = criar_rotina(client, auth_headers, exercicios[0], "Treino Pé & Força")
 
     response = client.post(
         f"{API}/planilha/export", json={"rotina_id": rotina_id}, headers=auth_headers
@@ -64,7 +39,7 @@ def test_exportar_rotina_de_outro_usuario_retorna_404(
     exercicios: list[Exercicio],
     register: RegisterFn,
 ) -> None:
-    rotina_id = _criar_rotina(client, auth_headers, exercicios[0], "Treino A")
+    rotina_id = criar_rotina(client, auth_headers, exercicios[0], "Treino A")
     outro_usuario = register(email="bruno@example.com")
     url = f"{API}/planilha/export"
 
