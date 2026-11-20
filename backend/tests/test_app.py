@@ -80,7 +80,11 @@ def test_erro_inesperado_retorna_500_sem_vazar_detalhes(
 
 def test_seed_e_idempotente_e_atualiza_divergencias(db: Session) -> None:
     primeira = seed_exercicios(db)
-    assert (primeira.inseridos, primeira.atualizados, primeira.total) == (len(EXERCICIOS), 0, 74)
+    assert (primeira.inseridos, primeira.atualizados, primeira.total) == (
+        len(EXERCICIOS),
+        0,
+        len(EXERCICIOS),
+    )
 
     exercicio = db.scalar(select(Exercicio).where(Exercicio.nome == EXERCICIOS[0].nome))
     assert exercicio is not None
@@ -88,7 +92,7 @@ def test_seed_e_idempotente_e_atualiza_divergencias(db: Session) -> None:
     db.commit()
 
     segunda = seed_exercicios(db)
-    assert (segunda.inseridos, segunda.atualizados, segunda.total) == (0, 1, 74)
+    assert (segunda.inseridos, segunda.atualizados, segunda.total) == (0, 1, len(EXERCICIOS))
     db.refresh(exercicio)
     assert exercicio.musculo == EXERCICIOS[0].musculo
 
