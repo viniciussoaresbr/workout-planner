@@ -87,7 +87,7 @@
           [maxLength]="nomeMax"
           [value]="store.nome()"
           (input)="store.nome.set($any($event.target).value)"
-          class="w-full rounded-md border-b border-transparent bg-transparent py-1 text-2xl font-semibold tracking-tight text-white outline-hidden transition placeholder:text-slate-600 hover:border-line focus:border-brand-400 sm:text-3xl"
+          class="w-full rounded-none border-b border-line bg-transparent py-1 text-2xl font-semibold tracking-tight text-white outline-hidden transition placeholder:text-slate-600 focus:border-brand-400 sm:text-3xl"
           placeholder="Ex.: Hipertrofia ABC"
         />
         <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-400">
