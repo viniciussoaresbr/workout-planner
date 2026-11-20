@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -54,9 +54,27 @@ class Settings(BaseSettings):
     password_hash_concurrency: int = Field(default=4, gt=0)
 
     @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
     def docs_enabled(self) -> bool:
         """Swagger/ReDoc/OpenAPI ficam desativados em produção."""
-        return self.environment != "production"
+        return not self.is_production
+
+    @model_validator(mode="after")
+    def require_https_origins_in_production(self) -> "Settings":
+        """Em produção o frontend precisa ser servido por HTTPS: senha e token não podem
+        trafegar em texto puro."""
+        if self.is_production:
+            inseguras = [
+                origin for origin in self.cors_origins if not origin.startswith("https://")
+            ]
+            if inseguras:
+                raise ValueError(
+                    f"Em produção, CORS_ORIGINS só aceita origens https:// (recebido: {inseguras})."
+                )
+        return self
 
     @field_validator("jwt_secret_key")
     @classmethod

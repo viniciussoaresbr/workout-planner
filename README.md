@@ -107,7 +107,7 @@ cp .env.example .env
 | `ENVIRONMENT` | `development`, `test` ou `production`. Em `production`, `/docs`, `/redoc` e `/openapi.json` ficam desativados |
 | `JWT_SECRET_KEY` | Segredo do JWT, com no mínimo 32 caracteres e aleatório. Gere com `python -c "import secrets; print(secrets.token_urlsafe(48))"`; a API não inicia com o valor de exemplo |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Validade do token (padrão: 60) |
-| `CORS_ORIGINS` | Lista JSON de origens permitidas (padrão: `["http://localhost:4200"]`) |
+| `CORS_ORIGINS` | Lista JSON de origens permitidas (padrão: `["http://localhost:4200"]`). Em `production`, só aceita origens `https://` |
 | `LOGIN_RATE_LIMIT_PER_MINUTE` | Tentativas de login por IP por minuto (padrão: 20) |
 | `LOGIN_FAILURE_LIMIT` | Falhas de login por e-mail vindas de um mesmo IP a cada 15 minutos antes do bloqueio temporário daquele IP (padrão: 10). O dono da conta continua entrando de outro IP |
 | `LOGIN_ACCOUNT_FAILURE_LIMIT` | Falhas de login por e-mail somando todos os IPs a cada hora antes do bloqueio temporário da conta, contra força bruta distribuída (padrão: 100) |

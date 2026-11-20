@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.exceptions import ServiceUnavailableError, register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.request_context import REQUEST_ID_HEADER, RequestIdMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.db.session import engine, ping_database
 from app.schemas.common import ApiResponse, HealthStatus
 
@@ -50,6 +51,13 @@ def create_app() -> FastAPI:
         expose_headers=["Content-Disposition", REQUEST_ID_HEADER],
     )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(
+        SecurityHeadersMiddleware,
+        hsts=settings.is_production,
+        csp_exempt_paths=frozenset({"/docs", "/redoc", "/docs/oauth2-redirect"})
+        if docs_enabled
+        else frozenset(),
+    )
     register_exception_handlers(app)
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)

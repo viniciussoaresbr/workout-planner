@@ -1,4 +1,5 @@
-"""Proteções de segurança: chave JWT, limites de tentativas, docs em produção e CORS."""
+"""Proteções de segurança: chave JWT, limites de tentativas, docs em produção, CORS e
+cabeçalhos HTTP."""
 
 from collections.abc import Iterator
 
@@ -35,9 +36,35 @@ def test_settings_rejeita_chave_jwt_de_exemplo_ou_fraca(secret: str) -> None:
         Settings(database_url="sqlite://", jwt_secret_key=secret)
 
 
+_CHAVE_VALIDA = "Zq3-vN8_kP1xR7tY0uW5sL2mC9bH4jG6"
+
+
 def test_settings_aceita_chave_jwt_aleatoria() -> None:
-    settings = Settings(database_url="sqlite://", jwt_secret_key="Zq3-vN8_kP1xR7tY0uW5sL2mC9bH4jG6")
+    settings = Settings(database_url="sqlite://", jwt_secret_key=_CHAVE_VALIDA)
     assert settings.jwt_secret_key.get_secret_value().startswith("Zq3")
+
+
+# ---- HTTPS em produção ----
+
+
+def test_producao_exige_origens_cors_https() -> None:
+    with pytest.raises(ValidationError, match="https://"):
+        Settings(
+            database_url="sqlite://",
+            jwt_secret_key=_CHAVE_VALIDA,
+            environment="production",
+            cors_origins=["https://treino.example.com", "http://treino.example.com"],
+        )
+
+
+def test_producao_aceita_origens_https_e_dev_aceita_http() -> None:
+    Settings(
+        database_url="sqlite://",
+        jwt_secret_key=_CHAVE_VALIDA,
+        environment="production",
+        cors_origins=["https://treino.example.com"],
+    )
+    Settings(database_url="sqlite://", jwt_secret_key=_CHAVE_VALIDA)  # http://localhost:4200
 
 
 # ---- RateLimiter ----
@@ -242,3 +269,37 @@ def test_cors_nao_libera_credenciais(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:4200"
     assert "access-control-allow-credentials" not in response.headers
+
+
+# ---- Cabeçalhos de segurança ----
+
+
+def test_respostas_da_api_trazem_cabecalhos_de_seguranca(client: TestClient) -> None:
+    for response in (client.get("/health"), client.get(f"{API}/auth/me")):  # 200 e 401
+        headers = response.headers
+        assert headers["x-content-type-options"] == "nosniff"
+        assert headers["x-frame-options"] == "DENY"
+        assert headers["referrer-policy"] == "no-referrer"
+        assert "default-src 'none'" in headers["content-security-policy"]
+        assert "frame-ancestors 'none'" in headers["content-security-policy"]
+        # HSTS só é enviado em produção.
+        assert "strict-transport-security" not in headers
+
+
+def test_swagger_fica_fora_da_csp_restritiva(client: TestClient) -> None:
+    response = client.get("/docs")
+
+    assert response.status_code == 200
+    assert "content-security-policy" not in response.headers
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_producao_envia_hsts(monkeypatch: pytest.MonkeyPatch) -> None:
+    production = main.settings.model_copy(update={"environment": "production"})
+    monkeypatch.setattr(main, "settings", production)
+
+    with TestClient(main.create_app()) as client:
+        response = client.get("/health")
+
+    assert response.headers["strict-transport-security"].startswith("max-age=63072000")
+    assert "default-src 'none'" in response.headers["content-security-policy"]
