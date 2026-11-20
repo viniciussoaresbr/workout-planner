@@ -162,7 +162,7 @@ O frontend ficará disponível em:
 http://localhost:4200
 ```
 
-Por padrão, o frontend já está configurado para consumir a API em `http://localhost:8000/api/v1`.
+Em desenvolvimento (`npm start`), o frontend consome a API em `http://localhost:8000/api/v1` (`src/environments/environment.ts`). O build de produção (`npm run build`) usa `src/environments/environment.prod.ts`, que aponta para `/api/v1` no mesmo domínio do frontend (veja [Produção](#produção)).
 
 ### 6. Fluxo esperado para desenvolvimento
 
@@ -196,6 +196,49 @@ npm test               # testes unitários (Vitest)
 npm run build          # build de produção em dist/
 npm run format         # formata o código com Prettier
 npm run format:check   # confere a formatação (útil em CI)
+```
+
+## Produção
+
+Sem HTTPS, a senha e o token trafegam em texto puro. Em produção, sirva o frontend e a API pelo mesmo domínio, atrás de um proxy reverso com TLS:
+
+- `ENVIRONMENT=production` desativa a documentação interativa, ativa o cabeçalho HSTS na API e exige origens `https://` em `CORS_ORIGINS`.
+- O build de produção chama a API em `/api/v1`, que herda o `https://` da página e dispensa CORS. Para hospedar a API em outro domínio, troque `apiUrl` em `environment.prod.ts` pela URL completa com `https://` e libere a origem do frontend em `CORS_ORIGINS`.
+- Inicie o uvicorn com `--proxy-headers --forwarded-allow-ips=<ip do proxy>` para que os limites de tentativas usem o IP real do cliente.
+
+A API já envia os próprios cabeçalhos de segurança (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` e, em produção, `Strict-Transport-Security`). O build do frontend embute uma CSP para scripts (`security.autoCsp` em `angular.json`), mas os demais cabeçalhos da página precisam vir do servidor web. Exemplo com nginx:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name treino.example.com;
+    # ssl_certificate / ssl_certificate_key: ex.: certificados do Let's Encrypt
+
+    root /srv/workout-planner/frontend/dist/frontend/browser;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Content-Security-Policy "frame-ancestors 'none'" always;
+    }
+
+    # A API define os próprios cabeçalhos de segurança.
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name treino.example.com;
+    return 301 https://$host$request_uri;
+}
 ```
 
 ## Observações
